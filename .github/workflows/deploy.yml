@@ -1,0 +1,32 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          
+      - name: Install dependencies
+        run: npm install uglify-js clean-css-cli -g
+        
+      - name: Minify assets
+        run: |
+          uglifyjs src/js/*.js -c -m -o src/js/bundle.min.js
+          cleancss -O2 src/css/*.css -o src/css/styles.min.css
+          
+      - name: Deploy
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Optimized assets" || echo "No changes to commit"
+          git push
