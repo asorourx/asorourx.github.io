@@ -621,7 +621,7 @@ updateConnectionStatus: () => {
         'connecting': ['🟡', 'connecting...'],
         'reconnecting': ['🟠', `Retrying (${state.connection.retryCount + 1})`],
         'error': ['⚠️', 'Error'],
-        'paused': ['⏸️', 'Paused']
+        'paused': ['⏸️', 'P']
     };
 
     const status = state.isPaused ? 'paused' : state.connection.status;
@@ -736,7 +736,7 @@ updateFavicon: (status) => {
         // Button event listeners
         elements.pauseButton.addEventListener('click', function() {
     state.isPaused = !state.isPaused;
-    this.textContent = state.isPaused ? 'Resume' : 'Pause';
+    this.textContent = state.isPaused ? 'R' : 'P'; // PAUSE, PAUSED, RESUME, RESUME
             
             if (state.isPaused) {
                 state.pauseStartTime = Date.now();
@@ -778,7 +778,7 @@ document.addEventListener('keydown', (e) => {
         e.preventDefault();
         // Directly toggle pause state instead of simulating click
         state.isPaused = !state.isPaused;
-        elements.pauseButton.textContent = state.isPaused ? 'Resume' : 'Pause';
+        elements.pauseButton.textContent = state.isPaused ? 'R' : 'P'; // PAUSE, PAUSED, RESUME, RESUME
         
         if (state.isPaused) {
             state.pauseStartTime = Date.now();
