@@ -27,14 +27,39 @@
         
 <div class="header-container">
     <div id="tradingview-widget-container" class="tradingview-widget-container" style="display: none; margin-top: 8px;">
-            <div class="tradingview-widget-container__widget"></div>
-        </div>
+        <div class="tradingview-widget-container__widget"></div>
+    </div>
     <div class="header-buttons">
         <button id="pauseButton" class="header-button">Pause</button>
         <button id="settingsButton" class="header-button" title="Visual settings"><i class="fas fa-cog"></i></button>
         <button id="refreshButton" class="refresh-button" title="Refresh prices">R</button>
         <div class="connection-indicator" id="connectionIndicator"></div>
-        <button id="TVScreen" class="tv-screen" title="TravindView Screen">T</button>
+        <button id="TVScreen" class="tv-screen" title="TradingView Screen">T</button>
+        <button id="themeToggle" class="theme-toggle-button" title="Toggle Light/Dark Mode">
+            <i class="fas fa-moon"></i>
+        </button>
+        
+        <!-- SVG Gauge Container -->
+        <div id="fearGreedGauge" class="gauge-container">
+            <svg viewBox="0 0 100 60" class="gauge-svg">
+                <defs>
+                    <linearGradient id="gaugeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#e74c3c" />
+                        <stop offset="50%" stop-color="#f1c40f" />
+                        <stop offset="100%" stop-color="#2ecc71" />
+                    </linearGradient>
+                </defs>
+                <line id="needle" x1="50" y1="50" x2="50" y2="20" stroke="#333" stroke-width="1" stroke-linecap="round" />
+<circle cx="50" cy="50" r="3" fill="#333" />
+                <!-- Background arc -->
+                <path d="M10,50 A40,40 0 0,1 90,50" stroke="url(#gaugeGradient)" stroke-width="10" fill="none" />
+                <!-- Center cap -->
+                <circle cx="50" cy="50" r="2" class="center-dot" />
+                <!-- Index value -->
+                <text id="valueText" x="50" y="40" class="value-text">--</text>
+                <!-- Label -->
+            </svg>
+        </div>
     </div>
 </div>
         <!-- TradingView Widget Under Pause and other Icons -->
@@ -49,12 +74,21 @@
                     <th>#</th>
                     <th>USDT.P</th>
                     <th>Price</th>
-                    <th>24H % Change</th>
+                    <th id="changeHeader">24H %<span class="sort-indicator"></span></th>
                     <th id="sortHeader">24H Volume <span class="sort-indicator">↓</span></th>
                 </tr>
             </thead>
             <tbody id="data"></tbody>
         </table>
+        
+<div class="mobile-pair-controls">
+        <button class="mobile-control up" title="Show less">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+        <button class="mobile-control down" title="Show more">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+</div>
         <div class="show-more-container">
             <button id="showMoreButton" class="show-more-button">Show More</button>
         </div>
@@ -154,5 +188,6 @@
 <script src="src/js/feedback.js" defer></script>
 <script src="src/js/tv-widget.js" defer></script>
 <script src="src/js/main.js" defer></script>
+<script src="src/js/theme.js" defer></script>
 </body>
 </html>

@@ -17,8 +17,9 @@ class FearGreedIndex {
         this.createPopup();
         await this.loadChartJS();
         this.initializeChart();
-        await this.fetchData();
+        await this.fetchData()  ;
         this.setupKeyboardShortcut();
+        this.createGaugeElement(); // Add gauge to DOM
     }
 
     createPopup() {
@@ -92,7 +93,52 @@ class FearGreedIndex {
         this.lastMonthValue = document.getElementById('lastMonthValue');
         this.yearHighValue = document.getElementById('yearHighValue');
         this.yearLowValue = document.getElementById('yearLowValue');
-    }   
+    }
+
+    createGaugeElement() {
+        // Create gauge container
+        const gaugeContainer = document.createElement('div');
+        gaugeContainer.className = 'fear-greed-gauge';
+        gaugeContainer.innerHTML = `
+            <div class="gauge-value">
+                <span class="gauge-label"></span>
+            </div>
+        `;
+        document.body.appendChild(gaugeContainer);
+        
+        // Make gauge draggable
+        this.makeDraggable(gaugeContainer);
+    }
+
+    makeDraggable(element) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        element.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            element.style.top = (element.offsetTop - pos2) + "px";
+            element.style.left = (element.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+    }
 
     async loadChartJS() {
         if (typeof Chart === 'undefined') {
@@ -164,8 +210,6 @@ class FearGreedIndex {
     }
 
     async fetchData() {
-        if (!this.popup.classList.contains('show')) return;
-        
         try {
             const response = await fetch('https://api.alternative.me/fng/?limit=30&timestamp=' + Date.now());
             const data = await response.json();
@@ -230,6 +274,7 @@ class FearGreedIndex {
     updateUI(data) {
         // Current value
         const current = data[0];
+        this.updateGauge(current.value); // Update the gauge
         this.valueElement.textContent = current.value;
         this.labelElement.textContent = current.value_classification;
         this.currentClassification = current.value_classification;
@@ -275,6 +320,29 @@ class FearGreedIndex {
         element.className = `fear-greed-popup-stat-value status-colored ${classificationClass}`;
     }
 
+updateGauge(value) {
+    const valueText = document.getElementById('valueText');
+    if (!valueText) return;
+    
+    const clamped = Math.max(0, Math.min(100, value));
+    
+    // Display value
+    valueText.textContent = clamped;
+    
+    // Remove all color classes
+    valueText.classList.remove('glow-low', 'glow-medium', 'glow-high');
+    
+    // Apply appropriate color class
+    if (clamped < 25) {
+        valueText.classList.add('glow-low');
+    } else if (clamped <= 75) {
+        valueText.classList.add('glow-medium');
+    } else {
+        valueText.classList.add('glow-high');
+    }
+}
+    
+
     show() {
         this.overlay.classList.add('show');
         this.popup.classList.add('show');
@@ -319,6 +387,6 @@ class FearGreedIndex {
 }
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.fearGreedIndex = new FearGreedIndex();
+document.addEventListener('DOMContentLoaded', () => { window.fearGreedIndex = new FearGreedIndex(); });
+document.getElementById('fearGreedGauge').addEventListener('click', function() { window.fearGreedIndex?.toggle(); // Safely call toggle if it exists
 });

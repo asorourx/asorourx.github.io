@@ -1,5 +1,6 @@
 /* Base Styles */
 body {
+    transition: background-color 0.4s ease, color 0.5s ease;
     font-family: 'Oxanium', -apple-system, BlinkMacSystemFont, sans-serif;
     background: #0f1923;
     color: #eaeaea;
@@ -7,14 +8,6 @@ body {
     padding: 8px;
     font-size: 14px;
 }
-  .header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    position: relative;
-    min-height: 50px;
-  }
 
 /*Hiding "Show more" button */
 .show-more-container {
@@ -30,6 +23,15 @@ body {
 table {
     table-layout: fixed;
     width: 100%;
+    min-width: 500px; /* Set your desired minimum table width */
+  overflow-x: auto;
+  display: block;
+}
+/* For modern browsers only */
+@supports (overflow-x: clip) {
+  table {
+    overflow-x: clip;
+  }
 }
 
 th, td {
@@ -41,9 +43,6 @@ th, td {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
-
-/*Skeleton Screens*/
 /* Skeleton loading styles */
 .skeleton {
     background-color: #2a2f3d;
@@ -69,9 +68,16 @@ th, td {
 Prevent first column from being highlighted during price updates */
 
 th:nth-child(1), td:nth-child(1) { width: 1.2%; }
-th:nth-child(2), td:nth-child(2) { width: 10%; }
-th:nth-child(3), td:nth-child(3) { width: 5%; }
-th:nth-child(4), td:nth-child(4) { width: 5%; }
+th:nth-child(2), td:nth-child(2) {
+    padding-left: 5px;
+    padding-right: 5px;
+    width: 3%; }
+
+
+th:nth-child(3), td:nth-child(3) { width: 3%; }
+th:nth-child(4), td:nth-child(4) {
+    padding-right: 12px; /* Extra space for indicator */
+    width: 3%; }
 th:nth-child(5), td:nth-child(5) { width: 20%; }
 
 th {
@@ -91,8 +97,42 @@ tr:hover {
 }
 
 .down {
-    color: #f6465d !important;
+    color: #fa0626 !important;
 }
+
+
+
+/* Start Sort indicator 24H % Change */
+/* Replace your existing sort indicator styles with: */
+#sortHeader, #changeHeader {
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+#sortHeader:hover, #changeHeader:hover {
+    background-color: rgba(240, 185, 11, 0.1) !important;
+}
+
+.sort-indicator {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 0.8em;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+#sortHeader:hover .sort-indicator,
+#changeHeader:hover .sort-indicator {
+    opacity: 1;
+}
+
+/* Active sort headers */
+#sortHeader.sort-active, 
+#changeHeader.sort-active {
+    color: #f0b90b !important;
+} /* End of Sort indicator 24H % Change */
+
 
 /* Header Styles */
 .header-container {
@@ -109,7 +149,7 @@ tr:hover {
     right: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
 }
 
 .header-button {
@@ -117,7 +157,7 @@ tr:hover {
     color: #f0b90b;
     border: 1px solid #f0b90b;
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 4px 6px;
     cursor: pointer;
     font-size: 0.9em;
     transition: all 0.2s;
@@ -701,18 +741,6 @@ tr:hover {
     animation: price-down var(--animation-duration) ease-out;
 }
 
-/* Manual Highlight Styles */
-.highlighted {
-    background-color: rgba(255, 0, 255, 0.2) !important;
-    outline: 1px solid rgba(255, 0, 255, 0.5);
-}
-
-#data tr td:first-child.highlighted {
-    background-color: rgba(255, 0, 255, 0.2) !important;
-    outline: 1px solid rgba(255, 0, 255, 0.5);
-    transition: none;
-}
-
 /* Volume Container Styles */
 .volume-container {
     display: inline-flex;
@@ -777,7 +805,6 @@ tr:hover {
     to { opacity: 0; bottom: 30px; }
 }
 
-
 /* Stalling Pairs */
 .stale-pair {
     opacity: 0.6;
@@ -802,7 +829,7 @@ tr:hover {
 .tradingview-widget-container {
     position: absolute;
     left: 0;
-    right: 200px; /* Adjust this value based on your header buttons width */
+    right: 220px; /* Adjust this value based on your header buttons width */
     height: 65px;
     overflow: hidden;
     z-index: 1;
@@ -874,5 +901,186 @@ tr:hover {
 .status-colored {
     transition: color 0.3s ease;
 }
-
 /*End of Fear & Greed Index*/
+
+
+/*Click Highlight*/
+.highlighted {
+    outline: 1px solid #f0b90b;
+}
+
+
+/* Safe pinned row indicator */
+#data tr.pinned-row td:first-child {
+    position: relative;
+    padding-left: 8px;
+}
+/* # */
+#data tr.pinned-row td:first-child::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #f0b90b;
+}
+/* Theme Toggle Button */
+.theme-toggle-button {
+    background: #2a2f3d;
+    color: #f0b90b;
+    border: 1px solid #f0b90b;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.theme-toggle-button:hover {
+    background: #3a3f4d;
+    transform: rotate(15deg);
+}
+
+/* System-aware default (before any JS runs) */
+@media (prefers-color-scheme: light) {
+    body:not([class*="-theme"]) {
+        background: #f5f5f5;
+        color: #333;
+    }
+}
+
+/* Manual light theme */
+body.light-theme {
+    background: #f5f5f5;
+    color: #333;
+}
+
+body.light-theme th {
+    background: #e0e0e0;
+    color: #333;
+}
+
+/* Icon states */
+body:not(.light-theme) .fa-sun,
+body.light-theme .fa-moon {
+    display: none;
+}
+
+body.light-theme tr:hover {
+    background: #e8e8e8 !important;
+}
+
+body.light-theme .header-button,
+body.light-theme .refresh-button,
+body.light-theme .tv-screen,
+body.light-theme .theme-toggle-button {
+    background: #e0e0e0;
+    color: #333;
+    border-color: #333;
+}
+
+/* Icon states */
+body:not(.light-theme) .fa-sun,
+body.light-theme .fa-moon {
+    display: none;
+}
+/* Start of Mobile ShowMore/Less pair controls */
+.mobile-pair-controls {
+    position: fixed;
+    right: 10px;
+    bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 100;
+}
+.mobile-control {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2a2f3d;
+    border: 1px solid #f0b90b;
+    color: #f0b90b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.mobile-control:hover {
+    background: #3a3f4d;
+    transform: scale(1.1);
+}
+
+/* Hide on desktop */
+@media (min-width: 768px) {
+    .mobile-pair-controls {
+        display: none;
+    }
+}
+/* End of Mobile ShowMore/Less pair controls */
+
+
+/* Gauge Styles */
+.gauge-container {
+    width: 50px;
+    height: 30px;
+    font-family: 'Oxanium', -apple-system, BlinkMacSystemFont, sans-serif;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 10px;
+    cursor: pointer;
+    padding: 5 5px;   /* Adjust left/right inner spacing (5px = example) */
+}
+
+.gauge-svg {
+    width: 100%;
+    height: auto;
+}
+
+.center-dot {
+    fill: #333;
+}
+
+.value-text {
+    font-size: 1.5rem;
+    fill: #000;
+    font-weight: normal;
+    text-anchor: middle;
+    transition: fill 0.3s ease;
+}
+
+#fearGreedGauge {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#fearGreedGauge:hover {
+    transform: scale(1.05);
+}
+
+#fearGreedGauge:active {
+    transform: scale(0.95);
+}
+/* Color classes for the gauge */
+.glow-low {
+    fill: #e74c3c !important;
+    filter: drop-shadow(0 0 2px #e74c3c);
+}
+
+.glow-medium {
+    fill: #f1c40f !important;
+    filter: drop-shadow(0 0 2px #f1c40f);
+}
+
+.glow-high {
+    fill: #2ecc71 !important;
+    filter: drop-shadow(0 0 2px #2ecc71);
+}
+
+/*End of GAUGE*/
