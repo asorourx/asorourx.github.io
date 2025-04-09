@@ -321,18 +321,46 @@ class FearGreedIndex {
     }
 
 updateGauge(value) {
-    const valueText = document.getElementById('valueText');
-    if (!valueText) return;
-    
+    // First try to get the gauge element if we don't have it
+    if (!this.gaugeElement) {
+        this.gaugeElement = document.getElementById('fearGreedGauge');
+        if (!this.gaugeElement) return;
+    }
+
+    // Get or create the value text element
+    let valueText = this.gaugeElement.querySelector('#valueText');
+    if (!valueText) {
+        // Create the text element if it doesn't exist
+        valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        valueText.setAttribute('id', 'valueText');
+        valueText.setAttribute('x', '50');
+        valueText.setAttribute('y', '40');
+        valueText.setAttribute('class', 'value-text');
+        valueText.setAttribute('text-anchor', 'middle');
+        this.gaugeElement.querySelector('svg').appendChild(valueText);
+    }
+
     const clamped = Math.max(0, Math.min(100, value));
     
-    // Display value
+    // Update needle position
+    const needle = this.gaugeElement.querySelector('#needle');
+    if (needle) {
+        const angle = (clamped / 100) * 180 - 90;
+        const radians = angle * (Math.PI / 180);
+        const length = 30;
+        const x2 = 50 + Math.cos(radians) * length;
+        const y2 = 50 + Math.sin(radians) * length;
+        needle.setAttribute('x2', x2);
+        needle.setAttribute('y2', y2);
+    }
+    
+    // Update value display
     valueText.textContent = clamped;
     
-    // Remove all color classes
+    // Update color - first remove all color classes
     valueText.classList.remove('glow-low', 'glow-medium', 'glow-high');
     
-    // Apply appropriate color class
+    // Then add the appropriate one
     if (clamped < 25) {
         valueText.classList.add('glow-low');
     } else if (clamped <= 75) {

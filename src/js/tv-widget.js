@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     { "proName": "FX:GBPUSD", "title": "GBP/USD" },
                     { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" },
                     { "proName": "BITSTAMP:ETHUSD", "title": "Ethereum" },
+                    { "proName": "BITSTAMP:XRP", "title": "XRP" },
                     { "proName": "OANDA:XAUUSD", "title": "Gold" },
                     { "proName": "NASDAQ:NVDA", "title": "NVIDIA" },
                     { "proName": "NASDAQ:TSLA", "title": "Tesla" },

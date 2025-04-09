@@ -102,7 +102,6 @@ const formatter = {
         return `$${formatted}`;
     },
     
-    
     volume: (value) => {
         const num = parseFloat(value);
         if (num >= 1000000000) return `$${(num/1000000000).toFixed(1)}B`;
@@ -112,7 +111,7 @@ const formatter = {
     },
     change: (value) => {
         return `${parseFloat(value) >= 0 ? '+' : ''}${parseFloat(value).toFixed(2)}%`;
-    },  // <-- Add comma here
+    },
     timer: (seconds) => {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
@@ -183,7 +182,7 @@ const connectionManager = {
         state.socket = new WebSocket(state.currentWsUrl);
 
         state.socket.onopen = () => {
-            console.log('WebSocket connected successfully');
+            //console.log('WebSocket connected successfully');
             state.connection.status = 'connected';
             state.connection.retryCount = 0;
             state.connection.lastUpdate = Date.now();
@@ -214,7 +213,7 @@ const connectionManager = {
 
 state.socket.onerror = (e) => {
     console.error('WebSocket error:', e);
-    ui.showLoading('Connection error - retrying...');
+    ui.showLoading('WebSocket - retrying...');
     connectionManager.handleDisconnection();
 };
     },
@@ -305,7 +304,7 @@ loadInitialData: async () => {
     state.isLoading = true;
     
     try {
-        ui.showLoading('Loading market data...');
+    //  ui.showLoading('Loading market data...');
         const response = await fetch(`${CONFIG.api.futures}/ticker/24hr`);
         
         if (!response.ok) {
@@ -328,7 +327,8 @@ loadInitialData: async () => {
         ui.renderTable();
     } catch (error) {
         console.error('Initial data load failed:', error);
-        ui.showLoading('Data load failed - retrying...');
+        // Geo issues; VPN Required! 
+        ui.showLoading('Connect to VPN - retrying...');
         setTimeout(dataManager.loadInitialData, 5000);
     } finally {
         state.isLoading = false;
@@ -562,37 +562,42 @@ toggleHighlight: (symbol, fromPriceClick = false) => {
     ui.renderTable();
 },
 
+    // 24H Volume [$DollarChange | Timer]
 updateHighlightTimer: (symbol) => {
     const row = document.querySelector(`tr[data-symbol="${symbol}"]`);
     if (!row) return;
-    
+
     const highlightData = state.highlightedPairs[symbol];
     if (!highlightData) return;
-    
+
     const currentItem = state.data.find(item => item.symbol === symbol);
     if (!currentItem) return;
-    
+
     const currentPrice = parseFloat(currentItem.lastPrice);
     const secondsElapsed = Math.floor((Date.now() - highlightData.highlightTime) / 1000);
-    const dollarChange = formatter.dollarChange(currentPrice, highlightData.highlightPrice, symbol); // Added symbol parameter
-    const timerText = formatter.timer(secondsElapsed);
-    
-    // Update the volume cell
+    const dollarChange = formatter.dollarChange(currentPrice, highlightData.highlightPrice, symbol);
+    const fullTimerText = new Date(secondsElapsed * 1000).toISOString().substr(11, 8);
+
+    // Pad both values for alignment (same logic, no inline style)
+    const paddedChange = dollarChange.text.padEnd(11, ' ');
+    const paddedTimer = fullTimerText.padStart(9, ' ');
+
     const volumeCell = row.querySelector('td:nth-child(5)');
     if (volumeCell) {
         const originalVolume = formatter.volume(currentItem.quoteVolume);
         volumeCell.innerHTML = `
-            <span class="volume-container">
+            <span class="volume-container monospace">
                 <span class="volume-value">${originalVolume}</span>
                 <span class="highlight-container">
-                    [<span class="${dollarChange.colorClass}">${dollarChange.text}</span> 
-                    <span class="highlight-separator">|</span> 
-                    <span class="highlight-timer">${timerText}</span>]
+                    [<span class="dollar-change ${dollarChange.colorClass}">${paddedChange}</span>
+                    <span class="highlight-separator">|</span>
+                    <span class="highlight-timer">${paddedTimer}</span> ]
                 </span>
             </span>
         `;
     }
 },
+
 
     // ===== NOTIFICATION SYSTEM =====
     showTempMessage: function(message, duration = 2000) {
@@ -728,16 +733,16 @@ updateFavicon: (status) => {
                             behavior: 'smooth'
                         });
                     }
-                    ui.showTempMessage(`Showing ${state.visibleCount} pairs`);
+                    // ui.showTempMessage(`Showing ${state.visibleCount} pairs`); // Just message "Showing 5 pairs"
                 });
             }
         };
 
         // Button event listeners
         elements.pauseButton.addEventListener('click', function() {
-    state.isPaused = !state.isPaused;
-    this.textContent = state.isPaused ? 'R' : 'P'; // PAUSE, PAUSED, RESUME, RESUME
+            state.isPaused = !state.isPaused;
             
+            this.textContent = state.isPaused ? 'R' : 'P'; // PAUSE, PAUSED, RESUME, RESUME
             if (state.isPaused) {
                 state.pauseStartTime = Date.now();
                 state.connection.status = 'paused';
@@ -804,7 +809,7 @@ document.addEventListener('keydown', (e) => {
     else if (e.key === 'l' || e.key === 'L') showLessPairs();
 });
 
-// Then later in your setupControls() function, add:
+
 const upControl = document.querySelector('.mobile-control.up');
 const downControl = document.querySelector('.mobile-control.down');
 
