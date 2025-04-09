@@ -67,7 +67,6 @@ td {
 
 /* END OF Skeleton loading styles */
 
-
 /* Prevent first column from being highlighted during price updates
  
 #data tr.update-up td:first-child,
@@ -105,6 +104,13 @@ td:nth-child(4) {
 th:nth-child(5),
 td:nth-child(5) {
 	width: 20%;
+}
+
+/* Ensure dollar change and timer are aligned consistently */
+.dollar-change {
+    display: inline-block;
+    min-width: 8ch; /* Adjusted for left-alignment */
+    text-align: left;
 }
 
 th {
@@ -161,6 +167,7 @@ tr:hover {
 	color: #f0b90b !important;
 }
 
+
 /* End of Sort indicator 24H % Change */
 
 
@@ -173,22 +180,30 @@ tr:hover {
 	position: relative;
 	min-height: 50px;
 }
-
+/* Volume Header Container */
+.volume-header-container {
+    display: flex;
+	gap: 4px;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+	
+}
 .header-buttons {
 	position: absolute;
 	right: 0;
 	display: flex;
 	align-items: center;
-	gap: 5px;
+	gap: 8px;
 }
 
 .header-button {
-	background: #2a2f3d;
+	background: none;
 	color: #f0b90b;
 	border: 1px solid #f0b90b;
 	border-radius: 50%;
-	width: 24px;
-	height: 24px;
+	width: 25px;
+	height: 25px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -204,20 +219,32 @@ tr:hover {
 }
 
 
+/* Refresh Button Styling */
 .refresh-button {
-	background: #2a2f3d;
-	color: #f0b90b;
-	border: 1px solid #f0b90b;
-	border-radius: 50%;
-	width: 24px;
-	height: 24px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	font-size: 12px;
-	font-weight: bold;
-	transition: all 0.2s;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #f0b90b;
+    background: #2a2f3d;
+    color: #f0b90b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+    margin: 0 2px;
+    font-size: 14px;
+}
+
+.reload {
+    font-family: "Lucida Sans Unicode", sans-serif;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.refresh-button:hover .reload {
+    transform: rotate(90deg);
 }
 
 .refresh-button:hover {
@@ -258,9 +285,9 @@ tr:hover {
 .connection-indicator {
 	background: #2a2f3d;
 	/* Default background */
-	color: #f0b90b;
+	/*color: #f0b90b;*/
 	/* Default text color */
-	border: 1px solid #f0b90b;
+	/*border: 1px solid #f0b90b;*/
 	/* Default border */
 	border-radius: 50%;
 	width: 24px;
@@ -550,7 +577,7 @@ tr:hover {
 	font-size: 14px;
 }
 
-/* Settings Panel */
+/* Visual Feedback Settings Panel */
 .settings-panel {
 	position: fixed;
 	top: 50%;
@@ -559,7 +586,7 @@ tr:hover {
 	background: #2a2f3d;
 	border: 1px solid #f0b90b;
 	border-radius: 4px;
-	padding: 15px;
+	padding: 12px;
 	z-index: 1000;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 	width: 350px;
@@ -603,13 +630,13 @@ tr:hover {
 }
 
 .close-settings:hover {
-	color: #ffffff;
+	color: #e31919;
 }
 
 .settings-content {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
 }
 
 .setting-item {
@@ -645,6 +672,8 @@ tr:hover {
 	min-width: 40px;
 	text-align: left;
 }
+
+/*End of Visual Feedback */
 
 /* Fear & Greed Index Popup */
 .fear-greed-popup-overlay {
@@ -686,13 +715,29 @@ tr:hover {
 }
 
 .fear-greed-popup-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 10px;
-	padding-bottom: 5px;
-	border-bottom: 1px solid #2a2f3d;
+    display: flex;
+    justify-content: center;  /* Center the content horizontally */
+    align-items: center;      /* Align items vertically in the center */
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #2a2f3d;
+    position: relative;
+    width: 100%; /* Ensure the header takes up the full width */
 }
+
+.fear-greed-popup-close {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 5px;
+    position: absolute; /* Make the close button position absolute */
+    right: 0;           /* Push it to the far right */
+}
+
+
 
 .fear-greed-popup-header h3 {
 	margin: 0;
@@ -702,18 +747,8 @@ tr:hover {
 	text-align: center;
 }
 
-.fear-greed-popup-close {
-	background: none;
-	border: none;
-	color: #aaa;
-	font-size: 24px;
-	cursor: pointer;
-	line-height: 1;
-	padding: 0 5px;
-}
-
 .fear-greed-popup-close:hover {
-	color: #fff;
+	color: red;
 }
 
 .fear-greed-popup-value {
@@ -790,7 +825,7 @@ tr:hover {
 :root {
 	--up-color: rgba(14, 203, 129, 0.2);
 	--down-color: rgba(246, 70, 93, 0.2);
-	--animation-duration: 1500ms;
+	--animation-duration: 3000ms;
 }
 
 @keyframes price-up {
@@ -833,28 +868,33 @@ tr:hover {
 .volume-container {
 	display: inline-flex;
 	align-items: center;
-	gap: 10px;
+	gap: 2px;
 }
 
 .volume-value {
-	min-width: 80px;
+	min-width: 65px;
 	display: inline-block;
 	text-align: left;
 }
 
 .highlight-container {
 	display: inline-block;
-	color: white;
+	color: #f8d347;
 	margin-left: 6px;
 }
 
 .highlight-separator {
-	color: white;
+	color: #f0b90b;
 	margin: 0 4px;
+	opacity: 0.6;
 }
 
 .highlight-timer {
-	color: #888;
+	color: #acabab;
+	display: inline-block;
+    min-width: 1ch; /* Matches JS padStart(9) */
+    text-align: left;
+	
 }
 
 .highlight-container .up {
@@ -864,6 +904,7 @@ tr:hover {
 .highlight-container .down {
 	color: #f6465d;
 }
+
 
 /* Temporary Message */
 .temp-message {
@@ -933,15 +974,15 @@ tr:hover {
 .tradingview-widget-container {
 	position: absolute;
 	left: 0;
-	right: 220px;
+	right: 250px;
 	/* Adjust this value based on your header buttons width */
-	height: 65px;
+	height: 70px;
 	overflow: hidden;
 	z-index: 1;
 	display: none;
 	/* Start hidden by default */
 	transition: opacity 0.3s ease;
-
+	margin-top: 8px;
 }
 
 @media (max-width: 768px) {
@@ -974,8 +1015,19 @@ tr:hover {
 }
 
 /* Tooltip for TV button */
+.header-button,
+.refresh-button,
 .tv-screen {
-	position: relative;
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+    margin: 0;
+    padding: 0;
+}
+/* Ensure table header has enough space */
+#sortHeader {
+    min-width: 600px;
+    position: relative;
 }
 
 .tv-screen::after {
@@ -1056,7 +1108,25 @@ tr:hover {
 	background-color: #f0b90b;
 }
 
+
+
 /* Theme Toggle Button */
+
+.theme-toggle-container {
+    grid-column: span 2; /* Make theme toggle span full width */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #3a3f4d;
+    margin-bottom: 10px;
+}
+
+.theme-toggle-container label {
+    margin-right: 10px;
+    color: #eaeaea;
+}
+
 .theme-toggle-button {
 	background: #2a2f3d;
 	color: #f0b90b;
@@ -1124,7 +1194,7 @@ body.light-theme .fa-moon {
 /* Start of Mobile ShowMore/Less pair controls */
 .mobile-pair-controls {
 	position: fixed;
-	right: 10px;
+	right: 100px;
 	bottom: 20px;
 	display: flex;
 	flex-direction: column;
@@ -1198,7 +1268,7 @@ body.light-theme .fa-moon {
 
 	/* Phones and small tablets */
 	.mobile-pair-controls {
-		bottom: 30px;
+		bottom: 50px;
 		/* Higher position on smaller screens */
 	}
 }
@@ -1207,8 +1277,8 @@ body.light-theme .fa-moon {
 
 	/* Small phones */
 	.mobile-control {
-		width: 30px;
-		height: 30px;
+		width: 40px;
+		height: 40px;
 		/* Slightly smaller on very small screens */
 	}
 }
@@ -1219,15 +1289,22 @@ body.light-theme .fa-moon {
 /* Gauge Styles */
 .gauge-container {
 	width: 50px;
-	height: 30px;
+	height: 28px;
 	font-family: 'Oxanium', -apple-system, BlinkMacSystemFont, sans-serif;
 	display: inline-block;
 	vertical-align: middle;
-	margin-left: 10px;
+	margin-left: 0.5px;
 	cursor: pointer;
 	padding: 5 5px;
 	/* Adjust left/right inner spacing (5px = example) */
 }
+
+/* Needle Style 
+#needle {
+    transition: all 0.5s ease;
+    stroke: yellow;
+    stroke-width: 1.75;
+} */
 
 .gauge-svg {
 	width: 100%;
@@ -1235,7 +1312,7 @@ body.light-theme .fa-moon {
 }
 
 .center-dot {
-	fill: #333;
+	fill: magenta;
 }
 
 .value-text {
@@ -1276,3 +1353,31 @@ body.light-theme .fa-moon {
 }
 
 /*End of GAUGE*/
+
+
+/* Hide scrollbar but keep functionality */
+html {
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+}
+
+html::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, and Opera */
+}
+
+/* Apply the same to elements with scrollable content */
+table, .search-container, #searchResults, .modal-content, .fear-greed-popup, .settings-panel {
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+}
+
+table::-webkit-scrollbar,
+.search-container::-webkit-scrollbar,
+#searchResults::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar,
+.fear-greed-popup::-webkit-scrollbar,
+.settings-panel::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, and Opera */
+}
+/* End of Hide scrollbar but keep functionality */
+
