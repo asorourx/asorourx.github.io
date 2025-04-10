@@ -22,11 +22,13 @@ body {
 /* Table Styles */
 table {
 	table-layout: fixed;
-	width: 100%;
 	min-width: 500px;
 	/* Set your desired minimum table width */
 	overflow-x: auto;
 	display: block;
+	width: 100%;
+    max-width: 1000px; /* Must match widget's max-width */
+    margin: 0 auto;
 }
 
 /* For modern browsers only */
@@ -176,14 +178,14 @@ tr:hover {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 8px;
+	margin-bottom: 0;
 	position: relative;
 	min-height: 50px;
 }
 /* Volume Header Container */
 .volume-header-container {
     display: flex;
-	gap: 4px;
+	gap: 40px;
     justify-content: space-between;
     align-items: center;
     width: 100%;
@@ -193,8 +195,8 @@ tr:hover {
 	position: absolute;
 	right: 0;
 	display: flex;
-	align-items: center;
-	gap: 8px;
+    gap: 4px;
+    align-items: center;
 }
 
 .header-button {
@@ -250,6 +252,20 @@ tr:hover {
 .refresh-button:hover {
 	background: #3a3f4d;
 	transform: rotate(90deg);
+}
+
+/* Refresh button states */
+.refresh-button.refreshing .reload-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.refresh-button:active .reload-icon {
+    transform: scale(1.2);
 }
 
 .tv-screen {
@@ -972,17 +988,31 @@ tr:hover {
 
 /* TradingView Widget Styles */
 .tradingview-widget-container {
-	position: absolute;
+    position: relative;
 	left: 0;
 	right: 250px;
 	/* Adjust this value based on your header buttons width */
-	height: 70px;
-	overflow: hidden;
 	z-index: 1;
-	display: none;
 	/* Start hidden by default */
-	transition: opacity 0.3s ease;
 	margin-top: 8px;
+	width: 100%;
+    max-width: 1000px; /* Match your table's max-width */
+    margin: 0 auto;
+    height: 65;
+    overflow: hidden;
+    transition: opacity 0.3s ease;
+    display: block;
+}
+.tradingview-widget-container.show {
+    height: 65px;
+    margin-bottom: 8px;
+}
+
+/* Visual Feedback */
+.tv-screen.active {
+    transform: scale(1.2);
+    background: #3a3f4d;
+    transition: all 0.2s ease;
 }
 
 @media (max-width: 768px) {

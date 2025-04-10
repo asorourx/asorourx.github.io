@@ -820,15 +820,20 @@ if (upControl && downControl) {
         
 
     // Volume sort control
-    elements.sortHeader.addEventListener('click', () => {
-        // Toggle volume sorting (desc → asc → none → desc...)
+elements.sortHeader.addEventListener('click', function(e) {
+    // Only trigger sort if clicking on the volume text (not buttons)
+    if (e.target.closest('.volume-text') || 
+        (!e.target.closest('.header-buttons') && !e.target.closest('button'))) {
+        
+        // Original sort logic
         if (!state.sortDirection.volume) {
             state.sortDirection = { volume: 'desc', change: null };
         } else {
             state.sortDirection.volume = state.sortDirection.volume === 'desc' ? 'asc' : null;
         }
         ui.renderTable();
-    });
+    }
+});
 
     // 24H % Change sort control - NEW CODE
     document.getElementById('changeHeader').addEventListener('click', () => {
