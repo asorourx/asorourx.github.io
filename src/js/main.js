@@ -58,6 +58,7 @@ const state = {
     // ===== DOM ELEMENTS =====
     const elements = {
         tableBody: document.getElementById('data'),
+        searchButton: document.getElementById('searchButton'),
         loadingIndicator: document.getElementById('loading'),
         pauseButton: document.getElementById('pauseButton'),
         refreshButton: document.getElementById('refreshButton'),
@@ -72,6 +73,9 @@ const state = {
         pairVolume: document.getElementById('pair-volume'),
         pair24hChange: document.getElementById('pair-24h-change'),
         pair12hChange: document.getElementById('pair-12h-change'),
+        searchInput: document.getElementById('searchInput'),
+        searchContainer: document.querySelector('.search-container'),
+        searchResults: document.getElementById('searchResults'),
     };
 
 // ===== FORMATTER =====
@@ -163,140 +167,134 @@ dollarChange: (currentPrice, highlightPrice, symbol) => {
 }
 };
 
+// ===== CONNECTION MANAGER =====
     // ===== CONNECTION MANAGER =====
-const connectionManager = {
-    connect: () => {
-        // Clear any existing connection
-        if (state.socket) {
-            state.socket.onopen = null;
-            state.socket.onclose = null;
-            state.socket.onerror = null;
-            state.socket.close();
-        }
+    const connectionManager = {
+        connect: function() {
+            // Clear any existing connection
+            if (state.socket) {
+                state.socket.onopen = null;
+                state.socket.onclose = null;
+                state.socket.onerror = null;
+                state.socket.close();
+            }
 
-        state.connection.status = 'connecting';
-        ui.updateConnectionStatus();
+            // Use AbortController for better cleanup
+            const abortController = new AbortController();
+            state.abortController = abortController;
 
-        console.log(`Connecting to ${state.currentWsUrl} (attempt ${state.connection.retryCount + 1})`);
-
-        state.socket = new WebSocket(state.currentWsUrl);
-
-        state.socket.onopen = () => {
-            //console.log('WebSocket connected successfully');
-            state.connection.status = 'connected';
-            state.connection.retryCount = 0;
-            state.connection.lastUpdate = Date.now();
+            state.connection.status = 'connecting';
             ui.updateConnectionStatus();
-            connectionManager.startHeartbeat();
-            dataManager.loadInitialData();
+
+            state.socket = new WebSocket(state.currentWsUrl);
+            state.socket.binaryType = 'arraybuffer';
+
+            state.socket.onopen = () => {
+                if (abortController.signal.aborted) return;
+                state.connection.status = 'connected';
+                state.connection.retryCount = 0;
+                state.connection.lastUpdate = Date.now();
+                ui.updateConnectionStatus();
+                dataManager.loadInitialData();
+            };
+
+            state.socket.onmessage = (e) => {
+                if (abortController.signal.aborted) return;
+                try {
+                    const data = JSON.parse(e.data);
+                    state.connection.lastUpdate = Date.now();
+                    if (!state.isPaused) {
+                        dataManager.processMarketData(data);
+                    }
+                } catch (err) {
+                    console.error('Error parsing WebSocket message:', err);
+                }
+            };
+
+            state.socket.onclose = (e) => {
+                if (abortController.signal.aborted) return;
+                this.handleDisconnection();
+            };
+
+            state.socket.onerror = (e) => {
+                if (abortController.signal.aborted) return;
+                this.handleDisconnection();
+            };
+        },
+
+        handleDisconnection: function() {
+            if (state.isPaused) return;
+            state.connection.status = 'disconnected';
+            ui.updateConnectionStatus();
+            this.stopHeartbeat();
+            this.scheduleReconnection();
+        },
+
+        scheduleReconnection: function() {
+            state.connection.retryCount++;
+            const delay = Math.min(
+                CONFIG.connection.baseDelay * Math.pow(2, state.connection.retryCount),
+                CONFIG.connection.maxDelay
+            );
+
+            state.connection.status = 'reconnecting';
+            ui.updateConnectionStatus();
+
+            setTimeout(() => {
+                if (!state.isPaused) this.connect();
+            }, delay);
+        },
+
+        startHeartbeat: function() {
+            this.stopHeartbeat();
+        },
+
+        stopHeartbeat: function() {
+            if (state.connection.pingInterval) {
+                clearInterval(state.connection.pingInterval);
+                state.connection.pingInterval = null;
+            }
+            if (state.pauseTimer) {
+                clearInterval(state.pauseTimer);
+                state.pauseTimer = null;
+            }
+        },
+
+        checkStalePairs: function() {
+            const STALE_THRESHOLD = 3600000;
+            const now = Date.now();
             
-            // Start stale pair checker (only if not already running)
-            if (!state.stalePairInterval) {
-                state.stalePairInterval = setInterval(
-                    () => connectionManager.checkStalePairs(),
-                    900000 // 15 minutes
-                );
+            state.data.forEach(pair => {
+                if (!pair.lastUpdated || (now - pair.lastUpdated > STALE_THRESHOLD)) {
+                    fetch(`${CONFIG.api.futures}/ticker/24hr?symbol=${pair.symbol}`)
+                        .then(res => {
+                            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                            return res.json();
+                        })
+                        .then(freshData => {
+                            if (freshData?.E && (!pair.lastUpdated || freshData.E > pair.lastUpdated)) {
+                                Object.assign(pair, {
+                                    lastPrice: freshData.lastPrice,
+                                    priceChangePercent: freshData.priceChangePercent,
+                                    quoteVolume: freshData.quoteVolume,
+                                    lastUpdated: freshData.E,
+                                    hadUpdate: true
+                                });
+                                ui.renderTable();
+                            }
+                        })
+                        .catch(err => console.warn(`Stale refresh failed for ${pair.symbol}:`, err));
+                }
+            });
+        },
+
+        cleanup: function() {
+            if (state.stalePairInterval) {
+                clearInterval(state.stalePairInterval);
+                state.stalePairInterval = null;
             }
-        };
-
-        state.socket.onmessage = (e) => {
-            state.connection.lastUpdate = Date.now();
-            if (!state.isPaused) {
-                dataManager.processMarketData(JSON.parse(e.data));
-            }
-        };
-
-        state.socket.onclose = (e) => {
-            console.log(`Connection closed: ${e.code} ${e.reason}`);
-            connectionManager.handleDisconnection();
-        };
-
-state.socket.onerror = (e) => {
-    console.error('WebSocket error:', e);
-    ui.showLoading('WebSocket - retrying...');
-    connectionManager.handleDisconnection();
-};
-    },
-
-    handleDisconnection: () => {
-        if (state.isPaused) return;
-
-        state.connection.status = 'disconnected';
-        ui.updateConnectionStatus();
-        connectionManager.stopHeartbeat();
-        connectionManager.scheduleReconnection();
-    },
-
-    scheduleReconnection: () => {
-        state.connection.retryCount++;
-        
-        const delay = Math.min(
-            CONFIG.connection.baseDelay * Math.pow(2, state.connection.retryCount),
-            CONFIG.connection.maxDelay
-        );
-
-        console.log(`Retrying in ${delay}ms (attempt ${state.connection.retryCount + 1})`); 
-        state.connection.status = 'reconnecting';
-        ui.updateConnectionStatus();
-
-        setTimeout(() => {
-            if (!state.isPaused) connectionManager.connect();
-        }, delay);
-    },
-
-    startHeartbeat: () => {
-        connectionManager.stopHeartbeat();
-        // Ping-Pong disabled for Binance
-    },
-
-    stopHeartbeat: () => {
-        if (state.connection.pingInterval) {
-            clearInterval(state.connection.pingInterval);
-            state.connection.pingInterval = null;
         }
-        if (state.pauseTimer) {
-            clearInterval(state.pauseTimer);
-            state.pauseTimer = null;
-        }
-    },
-
-    // NEW METHOD: Stale Pair Checker
-    checkStalePairs: () => {
-        const STALE_THRESHOLD = 3600000; // 1 hour
-        const now = Date.now();
-        
-        state.data.forEach(pair => {
-            if (!pair.lastUpdated || (now - pair.lastUpdated > STALE_THRESHOLD)) {
-                fetch(`${CONFIG.api.futures}/ticker/24hr?symbol=${pair.symbol}`)
-                    .then(res => {
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                        return res.json();
-                    })
-                    .then(freshData => {
-                        if (freshData?.E && (!pair.lastUpdated || freshData.E > pair.lastUpdated)) {
-                            Object.assign(pair, {
-                                lastPrice: freshData.lastPrice,
-                                priceChangePercent: freshData.priceChangePercent,
-                                quoteVolume: freshData.quoteVolume,
-                                lastUpdated: freshData.E,
-                                hadUpdate: true
-                            });
-                            ui.renderTable();
-                        }
-                    })
-                    .catch(err => console.warn(`Stale refresh failed for ${pair.symbol}:`, err));
-            }
-        });
-    },
-
-    // NEW METHOD: Cleanup
-    cleanup: () => {
-        if (state.stalePairInterval) {
-            clearInterval(state.stalePairInterval);
-            state.stalePairInterval = null;
-        }
-    }
-};
+    };
     // ===== DATA MANAGER =====
     const dataManager = {
 loadInitialData: async () => {
@@ -382,7 +380,209 @@ processMarketData: (marketData) => {
     ui.renderTable();
 }
 };
-    // ===== UI MANAGER =====
+    
+    
+// ===== DEBOUNCE HELPER =====
+function debounce(fn, delay) {
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+
+// ===== SEARCH MANAGER =====
+const searchManager = {
+init: function () {
+    // Keyboard shortcut to open search
+    document.addEventListener('keydown', (e) => {
+        // Only trigger search shortcut if not already in search input
+        if (e.key === '/' && document.activeElement !== elements.searchInput) {
+            e.preventDefault();
+            this.showSearch();
+            elements.searchInput.focus();
+        }
+        
+        // Close search with Escape
+        if (e.key === 'Escape' && elements.searchContainer.classList.contains('active')) {
+            e.preventDefault();
+            this.hideSearch();
+        }
+    });
+
+    // Click outside to close
+    document.addEventListener('click', (e) => {
+        if (!elements.searchContainer.contains(e.target) && 
+            e.target !== elements.searchButton &&
+            elements.searchContainer.classList.contains('active')) {
+            this.hideSearch();
+        }
+    });
+
+    // Handle keyboard navigation in search results
+// In searchManager.init()
+// In searchManager.init() - update the keydown handler
+elements.searchInput.addEventListener('keydown', (e) => {
+    const items = Array.from(elements.searchResults.querySelectorAll('.coin-item'));
+    
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        
+        // If no item is focused and this is first arrow down
+        if (document.activeElement === elements.searchInput && e.key === 'ArrowDown' && items.length > 0) {
+            items[0].focus();
+            items[0].scrollIntoView({ block: 'nearest' });
+            return;
+        }
+        
+        const currentActive = document.activeElement;
+        let currentIndex = items.indexOf(currentActive);
+        
+        if (e.key === 'ArrowDown') {
+            const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+            items[nextIndex].focus();
+            items[nextIndex].scrollIntoView({ block: 'nearest' });
+        } 
+        else if (e.key === 'ArrowUp') {
+            if (currentIndex <= 0) {
+                elements.searchInput.focus();
+            } else {
+                items[currentIndex - 1].focus();
+                items[currentIndex - 1].scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }
+    else if (e.key === 'Enter' && items.length > 0) {
+        e.preventDefault();
+        const focusedItem = document.activeElement;
+        if (items.includes(focusedItem)) {
+            focusedItem.click();
+        } else if (items.length > 0) {
+            items[0].click();
+        }
+    }
+});
+
+    // Debounced search input
+elements.searchInput.addEventListener('input', debounce((e) => {
+    const query = e.target.value.trim().toUpperCase();
+    if (!query) {
+        elements.searchResults.innerHTML = '';
+        elements.searchResults.style.display = 'none';
+        return;
+    }
+
+    const filtered = state.data.filter(item => {
+        const symbol = item.symbol.toUpperCase();
+        const base = item.symbol.replace('USDT', '').toUpperCase();
+        return symbol.includes(query) || base.includes(query);
+    }).slice(0, 10);
+
+    this.renderResults(filtered);
+    
+    // Auto-focus first result if available
+    setTimeout(() => {
+        const firstItem = elements.searchResults.querySelector('.coin-item');
+        if (firstItem && document.activeElement === elements.searchInput) {
+            firstItem.focus();
+        }
+    }, 50);
+    }, 300));
+},
+
+showSearch: function () {
+    elements.searchContainer.style.display = 'block';
+    elements.searchInput.focus();
+    elements.searchInput.value = '';
+    elements.searchResults.innerHTML = '';
+    elements.searchContainer.classList.add('active'); // Add active class
+},
+
+
+hideSearch: function () {
+    elements.searchContainer.style.display = 'none';
+    elements.searchInput.value = '';
+    elements.searchResults.innerHTML = '';
+    elements.searchContainer.classList.remove('active');
+    document.getElementById('searchButton').classList.remove('active');
+    
+    // Return focus to a sensible element
+    document.getElementById('searchButton').focus();
+},
+
+renderResults: function (results) {
+    elements.searchResults.innerHTML = '';
+    
+    if (!results || results.length === 0) {
+        elements.searchResults.innerHTML = `
+            <div class="no-results">
+                <div>No matching pairs found</div>
+                <small>Try a different search term</small>
+            </div>
+        `;
+        elements.searchResults.style.display = 'block';
+        return;
+    }
+
+    // Ensure container is properly sized before rendering
+    elements.searchResults.style.maxHeight = '60vh';
+    elements.searchResults.style.display = 'block';
+
+    results.forEach((item, index) => {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'coin-item';
+        resultItem.dataset.symbol = item.symbol;
+        resultItem.tabIndex = 0;
+        resultItem.innerHTML = `
+            <div class="coin-content">
+                <span class="pair-name">${item.symbol.replace('USDT', '')}</span>
+                ${getPlatformIcons(item.symbol)}
+            </div>
+            <span class="price">${formatter.price(item.lastPrice, item.symbol)}</span>
+        `;
+        
+        resultItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.handleSelect(item.symbol);
+            this.hideSearch();
+        });
+        
+        elements.searchResults.appendChild(resultItem);
+    });
+    
+    // Auto-scroll to top when new results come in
+    elements.searchResults.scrollTop = 0;
+},
+
+    handleSelect: function (symbol) {
+        const isHighlighted = state.highlightedPairs[symbol]?.isHighlighted;
+        const row = document.querySelector(`tr[data-symbol="${symbol}"]`);
+
+        if (isHighlighted) {
+            // Scroll to the highlighted pair
+            if (row) {
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else {
+            // Not highlighted
+            if (!state.pinnedPairs.includes(symbol)) {
+                state.pinnedPairs.push(symbol);
+                localStorage.setItem('pinnedPairs', JSON.stringify(state.pinnedPairs));
+            }
+
+            ui.toggleHighlight(symbol); // This both highlights and copies price
+            ui.renderTable(() => {
+                const pinnedRow = document.querySelector(`tr[data-symbol="${symbol}"]`);
+                if (pinnedRow) {
+                    pinnedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
+    }
+};
+
+        
+// ===== UI MANAGER =====
 const ui = {
     // ===== LOADING INDICATOR =====
     showLoading: (message) => {
@@ -597,26 +797,6 @@ updateHighlightTimer: (symbol) => {
         `;
     }
 },
-
-
-    // ===== NOTIFICATION SYSTEM =====
-    showTempMessage: function(message, duration = 2000) {
-        // Remove any existing temp message
-        const existingMsg = document.querySelector('.temp-message');
-        if (existingMsg) existingMsg.remove();
-        
-        // Create and show new message
-        const msgElement = document.createElement('div');
-        msgElement.className = 'temp-message';
-        msgElement.textContent = message;
-        document.body.appendChild(msgElement);
-        
-        // Auto-remove after duration
-        setTimeout(() => {
-            msgElement.classList.add('fade-out');
-            setTimeout(() => msgElement.remove(), 300);
-        }, duration);
-    },
 
     // ===== CONNECTION STATUS =====
 updateConnectionStatus: () => {
@@ -860,13 +1040,179 @@ window.addEventListener('beforeunload', () => {
 });
 
 
+
+
+
 // ===== INITIALIZATION =====
-const init = () => {
-    // Set initial title (using default loading state)
-    document.title = "🟡 • Loading...";
-    ui.setupControls();
-    connectionManager.connect();
+// Device detection and handling
+const isMobile = {
+    Android: function() {
+        return navigator.userAgent.match(/Android/i);
+    },
+    iOS: function() {
+        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+    },
+    any: function() {
+        return (isMobile.Android() || isMobile.iOS());
+    }
 };
+
+// Initialize with device-specific settings
+const init = () => {
+    document.title = "🟡 • Loading...";
+    // Mobile-specific adjustments
+    if (isMobile.any()) {
+        // Reduce animation intensity on mobile
+        document.documentElement.style.setProperty('--animation-duration', '1000ms');
+        
+        // Add touch event listeners
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('touchstart', () => {
+                btn.classList.add('touch-active');
+            });
+            btn.addEventListener('touchend', () => {
+                btn.classList.remove('touch-active');
+            });
+        });
+    }
+    
+// Add robust search button handler
+const searchButton = document.getElementById('searchButton');
+if (searchButton) {
+    searchButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (elements.searchContainer.style.display === 'block') {
+            searchManager.hideSearch();
+        } else {
+            searchManager.showSearch();
+            // Move focus to input only if not already focused
+            if (document.activeElement !== elements.searchInput) {
+                elements.searchInput.focus();
+            }
+        }
+    });
+}
+    
+// Desktop-specific adjustments
+else {
+    // Enable hover effects
+    document.documentElement.classList.add('desktop');
+    // More aggressive animations
+    document.documentElement.style.setProperty('--animation-duration', '3000ms');
+}
+    
+    ui.setupControls();
+    setupMobileButtons();
+    connectionManager.connect();
+    searchManager.init();
+};
+    
+// Mobile buttons setup function (outside init)
+// Improved mobile button setup with better touch handling
+function setupMobileButtons() {
+    if (isMobile.any()) {
+        // Helper function to simulate click with touch feedback
+        const simulateClickWithFeedback = (element, targetId) => {
+            const target = document.getElementById(targetId);
+            if (!target) return;
+            
+            // Add touch feedback
+            element.classList.add('touch-active');
+            setTimeout(() => element.classList.remove('touch-active'), 200);
+            
+            // Trigger the click
+            target.click();
+        };
+        
+        // Connect mobile buttons to same functionality as desktop
+        document.getElementById('mobilePauseButton')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            simulateClickWithFeedback(e.currentTarget, 'pauseButton');
+        });
+        
+        document.getElementById('mobileRefreshButton')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            simulateClickWithFeedback(e.currentTarget, 'refreshButton');
+        });
+        
+        document.getElementById('mobileTVScreen')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            simulateClickWithFeedback(e.currentTarget, 'TVScreen');
+        });
+        
+        document.getElementById('mobileThemeToggle')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            simulateClickWithFeedback(e.currentTarget, 'themeToggle');
+        });
+        
+        document.getElementById('mobileSettingsButton')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            simulateClickWithFeedback(e.currentTarget, 'settingsButton');
+        });
+        
+        // Arrow buttons - FIXED VERSION
+        document.querySelector('.mobile-arrow.up')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Directly call showLessPairs instead of simulating click
+            const showLessPairs = () => {
+                const previousCount = state.visibleCount;
+                state.visibleCount = Math.max(state.visibleCount - 5, 5);
+                
+                if (state.visibleCount !== previousCount) {
+                    const lastVisibleRow = document.querySelector(`#data tr:nth-child(${state.visibleCount})`);
+                    const lastRowPosition = lastVisibleRow ? lastVisibleRow.getBoundingClientRect().top : 0;
+                    
+                    ui.renderTable(() => {
+                        if (state.visibleCount > 5) {
+                            const newLastRow = document.querySelector(`#data tr:nth-child(${state.visibleCount})`);
+                            if (newLastRow) {
+                                const currentPosition = newLastRow.getBoundingClientRect().top;
+                                window.scrollBy({
+                                    top: currentPosition - lastRowPosition,
+                                    behavior: 'smooth'
+                                });
+                            }
+                        } else {
+                            window.scrollTo({
+                                top: 0,
+                                behavior: 'smooth'
+                            });
+                        }
+                    });
+                }
+            };
+            showLessPairs();
+        });
+        
+        document.querySelector('.mobile-arrow.down')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            simulateClickWithFeedback(e.currentTarget, 'showMoreButton');
+        });
+    }
+}
+
+// Make sure to call this when DOM is loaded
+document.addEventListener('DOMContentLoaded', setupMobileButtons);
+    
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
+        // Clear highlight timers
+        Object.keys(state.highlightTimers).forEach(symbol => {
+            clearInterval(state.highlightTimers[symbol]);
+        });
+        state.highlightTimers = {};
+
+        // Cleanup connection
+        connectionManager.cleanup();
+        if (state.abortController) {
+            state.abortController.abort();
+        }
+        if (state.pauseTimer) {
+            clearInterval(state.pauseTimer);
+        }
+    });
 
     init();
 });
