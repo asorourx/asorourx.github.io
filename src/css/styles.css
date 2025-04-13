@@ -1610,12 +1610,16 @@ button.touch-active {
 /* Show only on mobile/tablet */
 @media (max-width: 1024px) {
     .mobile-controls-container {
-        display: flex;
+        display: flex !important;
     }
     
     /* Hide desktop buttons except search, status, gauge */
     .header-buttons > *:not(#searchButton):not(#connectionIndicator):not(#fearGreedGauge) {
         display: none;
+    }
+    .mobile-control-btn, 
+    .mobile-arrow {
+        pointer-events: auto !important;
     }
 }
 

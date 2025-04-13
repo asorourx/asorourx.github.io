@@ -28,7 +28,19 @@ const CONFIG = {
     }
   }
 };
-
+    
+// ===== MOBILE DETECTION =====
+const isMobile = {
+    Android: function() {
+        return navigator.userAgent.match(/Android/i);
+    },
+    iOS: function() {
+        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+    },
+    any: function() {
+        return (isMobile.Android() || isMobile.iOS());
+    }
+};
 
     // ===== STATE MANAGEMENT =====
 const state = {
@@ -1149,23 +1161,11 @@ window.addEventListener('beforeunload', () => {
 
 
 // ===== INITIALIZATION =====
-// Device detection and handling
-const isMobile = {
-    Android: function() {
-        return navigator.userAgent.match(/Android/i);
-    },
-    iOS: function() {
-        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
-    },
-    any: function() {
-        return (isMobile.Android() || isMobile.iOS());
-    }
-};
-
 // Initialize with device-specific settings
 const init = () => {
     document.title = "🟡 • Loading...";
-    
+     // Mobile detection should now work since isMobile is defined at the top
+    console.log('Initializing for mobile:', isMobile.any());
     // Mobile-specific adjustments
     if (isMobile.any()) {
         // Reduce animation intensity on mobile
@@ -1229,19 +1229,27 @@ const init = () => {
                 .sort((a, b) => b.staleHours - a.staleHours);
         }
     };
-    console.log("Debug tools available: debugTools.checkStale(), debugTools.listStale()");
-
     // Initialize remaining components
     ui.setupControls();
-    setupMobileButtons();
     searchManager.init();
+    
+    // Delay mobile button setup to ensure DOM is ready
+    setTimeout(() => {
+        setupMobileButtons();
+    }, 100);
 };
     
 // Mobile buttons setup function (outside init)
 // Improved mobile button setup with better touch handling
 function setupMobileButtons() {
-    if (isMobile.any()) {
-        // Connect mobile buttons to their desktop counterparts
+    try {
+        if (!isMobile || !isMobile.any()) {
+            console.log('Not a mobile device, skipping mobile button setup');
+            return;
+        }
+
+        console.log('Setting up mobile buttons for:', navigator.userAgent);
+
         const buttonMap = {
             'mobilePauseButton': 'pauseButton',
             'mobileRefreshButton': 'refreshButton',
@@ -1250,84 +1258,51 @@ function setupMobileButtons() {
             'mobileSettingsButton': 'settingsButton'
         };
 
-        // Add touch feedback and click handlers
+        // Setup main buttons
         Object.keys(buttonMap).forEach(mobileId => {
             const mobileBtn = document.getElementById(mobileId);
             const desktopBtn = document.getElementById(buttonMap[mobileId]);
             
             if (mobileBtn && desktopBtn) {
-                // Touch feedback
-                mobileBtn.addEventListener('touchstart', () => {
-                    mobileBtn.classList.add('touch-active');
-                });
-                
-                mobileBtn.addEventListener('touchend', () => {
-                    mobileBtn.classList.remove('touch-active');
-                });
-                
-                // Click handler
                 mobileBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     desktopBtn.click();
                 });
+                console.log(`Connected ${mobileId} to ${buttonMap[mobileId]}`);
+            } else {
+                console.warn(`Could not find ${mobileId} or ${buttonMap[mobileId]}`);
             }
         });
 
-        // Special handling for arrow buttons
-        document.querySelector('.mobile-arrow.up')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            // Directly call showLessPairs
-            const previousCount = state.visibleCount;
+        // Setup arrow buttons
+        const setupArrow = (selector, action) => {
+            const arrow = document.querySelector(selector);
+            if (arrow) {
+                arrow.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    action();
+                });
+                console.log(`Setup ${selector} button`);
+            } else {
+                console.warn(`Could not find ${selector}`);
+            }
+        };
+
+        setupArrow('.mobile-arrow.up', () => {
             state.visibleCount = Math.max(state.visibleCount - 5, 5);
-            
-            if (state.visibleCount !== previousCount) {
-                const lastVisibleRow = document.querySelector(`#data tr:nth-child(${state.visibleCount})`);
-                const lastRowPosition = lastVisibleRow ? lastVisibleRow.getBoundingClientRect().top : 0;
-                
-                ui.renderTable(() => {
-                    if (state.visibleCount > 5) {
-                        const newLastRow = document.querySelector(`#data tr:nth-child(${state.visibleCount})`);
-                        if (newLastRow) {
-                            const currentPosition = newLastRow.getBoundingClientRect().top;
-                            window.scrollBy({
-                                top: currentPosition - lastRowPosition,
-                                behavior: 'smooth'
-                            });
-                        }
-                    } else {
-                        window.scrollTo({
-                            top: 0,
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            }
+            ui.renderTable();
         });
 
-        document.querySelector('.mobile-arrow.down')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            // Directly call showMorePairs
-            const previousCount = state.visibleCount;
+        setupArrow('.mobile-arrow.down', () => {
             state.visibleCount = Math.min(state.visibleCount + 5, CONFIG.defaults.totalPairs);
-            
-            if (state.visibleCount !== previousCount) {
-                ui.renderTable(() => {
-                    const rows = document.querySelectorAll('#data tr');
-                    if (rows.length > 0) {
-                        rows[rows.length - 1].scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'nearest'
-                        });
-                    }
-                    ui.showTempMessage(`Showing ${state.visibleCount} pairs`);
-                });
-            }
+            ui.renderTable();
         });
+
+    } catch (error) {
+        console.error('Error setting up mobile buttons:', error);
     }
 }
 
-// Make sure to call this when DOM is loaded
-document.addEventListener('DOMContentLoaded', setupMobileButtons);
     
     // Cleanup
     window.addEventListener('beforeunload', () => {
