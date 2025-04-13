@@ -26,13 +26,23 @@ table {
 	table-layout: fixed;
 	/* Set your desired minimum table width */
 	overflow-x: auto;
+    overflow-y: auto;
 	display: block;
 	width: 100%;
     max-width: 1000px; /* Must match widget's max-width */
     margin: 0 auto;
 	white-space: nowrap; /* Prevent line breaks */
     min-width: 100%;
+    max-height: 80vh; /* allows scrolling within the table */
+
 }
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #2a2f3d;
+}
+
 
 /* For modern browsers only */
 @supports (overflow-x: clip) {

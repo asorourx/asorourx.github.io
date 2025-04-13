@@ -18,7 +18,7 @@
     <div id="app">
         <!-- Search Container -->
         <div class="search-container" style="display: none;">
-            <input type="text" id="searchInput" placeholder="Search any USDT pair (Spot or Futures)...">
+            <input type="text" id="searchInput" placeholder="Search any Future/USDT...">
             <div id="searchResults"></div>
         </div>
         
@@ -150,6 +150,18 @@
                 </div>
             </div>
         </div>
+        <script>
+document.getElementById('add-feedback-setting').addEventListener('click', function () {
+  const settingGroup = this.closest('.settings-group');
+  const newSetting = document.createElement('div');
+  newSetting.className = 'setting-item';
+  newSetting.innerHTML = `
+    <label><input type="checkbox"> New Setting</label>
+  `;
+  settingGroup.appendChild(newSetting);
+});
+</script>
+
         
         <!-- Pair Detail Modal -->
         <div id="pair-detail-modal" class="pair-detail-modal">
