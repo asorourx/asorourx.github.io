@@ -803,6 +803,204 @@ renderTable: (callback) => {
     }
 },
 
+
+// Add to ui object in main.js
+// Update the showNotesModal function in main.js
+showNotesModal: (symbol) => {
+    const highlightData = state.highlightedPairs[symbol] || {};
+    const pairData = state.data.find(item => item.symbol === symbol);
+
+    // Create modal HTML with current price display
+const modalHTML = `
+<div class="notes-modal-overlay">
+    <div class="notes-modal" draggable="true">
+        <div class="notes-modal-header">
+            <div class="pair-header">
+                <img src="icons/cryptologos/${symbol.replace('USDT', '').toLowerCase()}.png"
+                     onerror="this.src='icons/cryptologos/generic.png'"
+                     class="modal-pair-icon">
+                <h3>${symbol.replace('USDT', '')}</h3>
+                <span class="current-price">Current: $${pairData?.lastPrice || 'N/A'}</span>
+            </div>
+            <button class="close-notes-modal">&times;</button>
+        </div>
+            <div class="notes-modal-body">
+                <div class="pair-info">
+                    <span>Price: $${highlightData.highlightPrice}</span>
+                    <span>Highlighted at: ${new Date(highlightData.highlightTime).toLocaleString()}</span>
+                </div>
+                <textarea class="notes-textarea" placeholder="Type your notes here...">${highlightData.notes || ''}</textarea>
+                <div class="checkboxes-container">
+                    ${(highlightData.checkboxes || [
+                        {text: "This is box 1", checked: false},
+                        {text: "This is box 2", checked: false},
+                        {text: "This is box 3", checked: false}
+                    ]).map((box, i) => `
+                        <label>
+                            <input type="checkbox" ${box.checked ? 'checked' : ''}
+                                   data-index="${i}"> ${box.text}
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+
+    // Add to DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Make modal draggable
+    const modal = document.querySelector('.notes-modal-overlay');
+    const draggableModal = modal.querySelector('.notes-modal');
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+    draggableModal.addEventListener('mousedown', dragMouseDown);
+
+    function dragMouseDown(e) {
+        if (e.target.classList.contains('notes-textarea') ||
+            e.target.tagName === 'INPUT' ||
+            e.target.tagName === 'LABEL') {
+            return;
+        }
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        draggableModal.style.top = (draggableModal.offsetTop - pos2) + "px";
+        draggableModal.style.left = (draggableModal.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+
+    // Update current price dynamically
+// Replace the updateCurrentPrice function with this:
+function updateCurrentPrice() {
+    const currentPairData = state.data.find(item => item.symbol === symbol);
+    if (currentPairData) {
+        const currentPriceEl = modal.querySelector('.current-price');
+        const highlightPrice = parseFloat(highlightData.highlightPrice || 0);
+        const currentPrice = parseFloat(currentPairData.lastPrice || 0);
+
+        currentPriceEl.textContent = `Current: $${currentPairData.lastPrice}`;
+
+        // Remove previous color classes
+        currentPriceEl.classList.remove('price-up', 'price-down');
+
+        // Add appropriate color class
+        if (currentPrice > highlightPrice) {
+            currentPriceEl.classList.add('price-up');
+        } else if (currentPrice < highlightPrice) {
+            currentPriceEl.classList.add('price-down');
+        }
+    }
+}
+
+    // Add event listeners
+    const textarea = modal.querySelector('.notes-textarea');
+    const closeBtn = modal.querySelector('.close-notes-modal');
+
+    // Prevent spacebar from pausing when typing in notes
+    textarea.addEventListener('keydown', (e) => {
+        if (e.key === ' ') {
+            e.stopPropagation();
+        }
+    });
+
+    // Handle text input with asterisk logic
+    textarea.addEventListener('input', (e) => {
+        const lines = textarea.value.split('\n');
+        const newLines = lines.map((line, i) => {
+            if (i > 0 && lines[i-1].trim().endsWith('.') && !line.trim().startsWith('*')) {
+                return '* ' + line;
+            }
+            return line;
+        });
+        if (newLines.some((line, i) => line !== lines[i])) {
+            textarea.value = newLines.join('\n');
+        }
+    });
+
+    // Handle checkbox changes
+    modal.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            if (!state.highlightedPairs[symbol]) return;
+            if (!state.highlightedPairs[symbol].checkboxes) {
+                state.highlightedPairs[symbol].checkboxes = [
+                    {text: "This is box 1", checked: false},
+                    {text: "This is box 2", checked: false},
+                    {text: "This is box 3", checked: false}
+                ];
+            }
+            state.highlightedPairs[symbol].checkboxes[parseInt(checkbox.dataset.index)].checked = checkbox.checked;
+            localStorage.setItem(CONFIG.defaults.highlightStorageKey, JSON.stringify(state.highlightedPairs));
+        });
+    });
+
+    // Close button
+    closeBtn.addEventListener('click', () => {
+        // Save notes
+        if (!state.highlightedPairs[symbol]) return;
+        state.highlightedPairs[symbol].notes = textarea.value;
+        localStorage.setItem(CONFIG.defaults.highlightStorageKey, JSON.stringify(state.highlightedPairs));
+        modal.remove();
+        clearInterval(priceUpdateInterval);
+    });
+
+    // ESC key to close
+    document.addEventListener('keydown', function escHandler(e) {
+        if (e.key === 'Escape') {
+            // Save notes
+            if (state.highlightedPairs[symbol]) {
+                state.highlightedPairs[symbol].notes = textarea.value;
+                localStorage.setItem(CONFIG.defaults.highlightStorageKey, JSON.stringify(state.highlightedPairs));
+            }
+            modal.remove();
+            document.removeEventListener('keydown', escHandler);
+            clearInterval(priceUpdateInterval);
+        }
+    });
+
+    // Only close when clicking outside if there are unsaved changes
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            const confirmClose = confirm('You have unsaved changes. Close without saving?');
+            if (confirmClose) {
+                modal.remove();
+                document.removeEventListener('keydown', escHandler);
+                clearInterval(priceUpdateInterval);
+            }
+        }
+    });
+
+    // Prevent closing when clicking inside modal
+    draggableModal.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    // Update current price periodically
+    const priceUpdateInterval = setInterval(updateCurrentPrice, 1000);
+
+    // Initial price update
+    updateCurrentPrice();
+
+    // Focus textarea
+    textarea.focus();
+},
+
+
 attachRowEvents: () => {
     document.querySelectorAll('#data tr').forEach(row => {
         row.addEventListener('click', (e) => {
@@ -889,6 +1087,7 @@ toggleHighlight: (symbol, fromPriceClick = false) => {
 },
 
     // 24H Volume [$DollarChange | Timer]
+// Update the updateHighlightTimer function to include notes icon
 updateHighlightTimer: (symbol) => {
     const row = document.querySelector(`tr[data-symbol="${symbol}"]`);
     if (!row) return;
@@ -904,9 +1103,9 @@ updateHighlightTimer: (symbol) => {
     const dollarChange = formatter.dollarChange(currentPrice, highlightData.highlightPrice, symbol);
     const fullTimerText = new Date(secondsElapsed * 1000).toISOString().substr(11, 8);
 
-    // Pad both values for alignment (same logic, no inline style)
-    const paddedChange = dollarChange.text.padEnd(11, ' ');
-    const paddedTimer = fullTimerText.padStart(9, ' ');
+    // Check if notes exist for this pair
+    const hasNotes = highlightData.notes ||
+                    (highlightData.checkboxes && highlightData.checkboxes.some(c => c.checked));
 
     const volumeCell = row.querySelector('td:nth-child(5)');
     if (volumeCell) {
@@ -915,12 +1114,19 @@ updateHighlightTimer: (symbol) => {
             <span class="volume-container monospace">
                 <span class="volume-value">${originalVolume}</span>
                 <span class="highlight-container">
-                    [<span class="dollar-change ${dollarChange.colorClass}">${paddedChange}</span>
+                    [<span class="dollar-change ${dollarChange.colorClass}">${dollarChange.text}</span>
                     <span class="highlight-separator">|</span>
-                    <span class="highlight-timer">${paddedTimer}</span> ]
+                    <span class="highlight-timer">${fullTimerText}</span> ]
+                    <span class="notes-icon ${hasNotes ? 'has-notes' : ''}" data-symbol="${symbol}">📝</span>
                 </span>
             </span>
         `;
+
+        // Add click handler for notes icon
+        volumeCell.querySelector('.notes-icon').addEventListener('click', (e) => {
+            e.stopPropagation();
+            ui.showNotesModal(symbol);
+        });
     }
 },
 
