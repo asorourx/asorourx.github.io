@@ -1297,14 +1297,29 @@ function setupMobileButtons() {
             }
         };
 
+        // Up arrow - show less pairs
         setupArrow('.mobile-arrow.up', () => {
             state.visibleCount = Math.max(state.visibleCount - 5, 5);
             ui.renderTable();
         });
 
+        // Down arrow - show more pairs (with scroll to last pair)
         setupArrow('.mobile-arrow.down', () => {
+            const previousCount = state.visibleCount;
             state.visibleCount = Math.min(state.visibleCount + 5, CONFIG.defaults.totalPairs);
-            ui.renderTable();
+            
+            if (state.visibleCount !== previousCount) {
+                ui.renderTable(() => {
+                    const rows = document.querySelectorAll('#data tr');
+                    if (rows.length > 0) {
+                        rows[rows.length - 1].scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'nearest'
+                        });
+                    }
+                    ui.showTempMessage(`Showing ${state.visibleCount} pairs`);
+                });
+            }
         });
 
     } catch (error) {
