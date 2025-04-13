@@ -7,6 +7,8 @@ body {
 	margin: 0;
 	padding: 8px;
 	font-size: 14px;
+	min-width: 600px;
+    overflow-x: auto;
 }
 
 /*Hiding "Show more" button */
@@ -22,13 +24,14 @@ body {
 /* Table Styles */
 table {
 	table-layout: fixed;
-	min-width: 500px;
 	/* Set your desired minimum table width */
 	overflow-x: auto;
 	display: block;
 	width: 100%;
     max-width: 1000px; /* Must match widget's max-width */
     margin: 0 auto;
+	white-space: nowrap; /* Prevent line breaks */
+    min-width: 100%;
 }
 
 /* For modern browsers only */
@@ -69,20 +72,27 @@ td {
 
 /* END OF Skeleton loading styles */
 
-/* Prevent first column from being highlighted during price updates
- 
-#data tr.update-up td:first-child,
-#data tr.update-down td:first-child {
-    animation: none !important;
-    background-color: transparent !important;
-}
-Prevent first column from being highlighted during price updates */
-
 th:nth-child(1),
 td:nth-child(1) {
 	width: 1.2%;
 }
+/* Prevent first column from being highlighted during price updates */
+/* More specific selector to override animations */
+#data > tr.update-up > td:first-child,
+#data > tr.update-down > td:first-child {
+    animation: none !important;
+    background-color: transparent !important;
+    -webkit-animation: none !important;
+   /* border: 2px solid red !important;*/
+}
 
+#data tr.update-up td:first-child,
+#data tr.update-up td:first-child *,
+#data tr.update-down td:first-child,
+#data tr.update-down td:first-child * {
+    animation: none !important;
+    background-color: transparent !important;
+}
 th:nth-child(2),
 td:nth-child(2) {
 	padding-left: 5px;
@@ -103,9 +113,12 @@ td:nth-child(4) {
 	width: 3%;
 }
 
+/* 2. Prevent the 5th column from collapsing */
 th:nth-child(5),
 td:nth-child(5) {
-	width: 20%;
+    min-width: 240px !important; /* Fixed minimum width */
+    width: auto;
+    overflow: visible !important;
 }
 
 /* Ensure dollar change and timer are aligned consistently */
@@ -185,18 +198,19 @@ tr:hover {
 /* Volume Header Container */
 .volume-header-container {
     display: flex;
-	gap: 40px;
+    gap: 10px; /* Reduced from 40px for better mobile behavior */
     justify-content: space-between;
     align-items: center;
     width: 100%;
-	
+    min-width: max-content; /* Prevent collapsing */
+    white-space: nowrap; /* Prevent text wrapping */
 }
 .header-buttons {
-	position: absolute;
-	right: 0;
-	display: flex;
+    display: flex;
     gap: 4px;
     align-items: center;
+    flex-shrink: 0; /* Prevent shrinking */
+    margin-left: auto; /* Push to the right */
 }
 
 .header-button {
@@ -543,7 +557,28 @@ tr:hover {
     min-width: 80px; /* Prevent price from shifting */
     padding-left: 8px;
 }
+/* 5. Adjust for very small screens (below 920px) */
+@media (max-width: 920px) {
+    /* Ensure the 5th column stays wide enough */
+    th:nth-child(5),
+    td:nth-child(5) {
+        min-width: 260px !important; /* Extra space for buttons */
+    }
 
+    /* Reduce gaps slightly */
+    .volume-header-container {
+        gap: 6px;
+    }
+
+    /* Shrink buttons if needed (but keep them visible) */
+    .header-button,
+    .connection-indicator,
+    #fearGreedGauge {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+}
 /* Responsive adjustments */
 @media (max-width: 600px) {
     .coin-item {
@@ -557,8 +592,16 @@ tr:hover {
     .platform-icons {
         justify-content: flex-end;
     }
+    th:nth-child(5),
+    td:nth-child(5) {
+    min-width: 280px !important; /* Even more space */
+    }
+	    /* Stack buttons if absolutely necessary */
+    .header-buttons {
+        flex-wrap: wrap;
+        max-width: 100px; /* Prevent overflow */
+	}
 }
-
 /* No Results */
 .no-results {
     padding: 16px;
@@ -1079,21 +1122,6 @@ tr:hover {
 	color: #f6465d;
 }
 
-
-/* Temporary Message */
-.temp-message {
-	position: fixed;
-	bottom: 20px;
-	left: 50%;
-	transform: translateX(-50%);
-	background: rgba(0, 0, 0, 0.8);
-	color: white;
-	padding: 10px 20px;
-	border-radius: 4px;
-	z-index: 1000;
-	animation: fadeIn 0.3s ease-out;
-}
-
 .temp-message.fade-out {
 	animation: fadeOut 0.3s ease-in;
 }
@@ -1187,9 +1215,26 @@ tr:hover {
 	.highlight-timer {
 		width: 50px;
 		/* Smaller width on mobile */
-	}
+	}    
+    th:nth-child(5),
+    td:nth-child(5) {
+        min-width: 150px; /* Slightly smaller minimum for mobile */
+    }
+    
+    /* Ensure buttons remain visible */
+    .header-button, 
+    .connection-indicator, 
+    #fearGreedGauge {
+        width: 25px; /* Slightly smaller buttons */
+        height: 25px;
+        font-size: 14px;
+    }
 }
-
+/* Prevent text from wrapping */
+.volume-text {
+    white-space: nowrap;
+    margin-right: auto; /* Push buttons to the right */
+}
 @media (max-width: 768px) {
 	.tradingview-widget-container {
 		right: 250px;
@@ -1579,4 +1624,52 @@ button.touch-active {
     .mobile-controls-container {
         display: none !important;
     }
+}
+
+/* Crypto Icon Styles */
+.crypto-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin-right: 5px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.pin-icon .crypto-icon {
+    cursor: pointer;
+}
+
+.pin-icon:hover .crypto-icon {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.pinned-icon {
+    opacity: 1;
+    border: 1px solid #ffc200;
+    border-radius: 50%;
+    padding: 2px;
+    box-shadow: 0 0 5px rgba(240, 185, 11, 0.5);
+}
+
+/* Stalling Pairs */
+.stale-row {
+    opacity: 0.7;
+    background-color: #fff3cd !important; /* Light yellow */
+    transition: all 0.3s ease;
+}
+.stale-row:hover {
+    opacity: 1;
+}
+.pair-removed-alert {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #ff4444;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    z-index: 1000;
+    animation: fadeIn 0.3s;
 }

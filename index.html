@@ -44,9 +44,7 @@
                                 <!-- Loading Indicator -->
                                 <div id="loading"></div>
                                 <div class="connection-indicator" id="connectionIndicator"></div>
-    <button id="searchButton" class="header-button" title="Search (/)">
-        <i class="fas fa-search"></i>
-    </button>
+                                <button id="searchButton" class="header-button" title="Search (/)"><i class="fas fa-search"></i></button>
                                 <button id="pauseButton" class="header-button">P</button>
                                 <!--Refresh Button-->
                                 <button id="refreshButton" class="refresh-button" title="Refresh">
@@ -76,6 +74,7 @@
                                         <text id="valueText" x="50" y="40" class="value-text">--</text>
                                     </svg>
                                 </div>
+                            
                             </div>
                         </div>
                     </th>
@@ -84,37 +83,36 @@
             <tbody id="data"></tbody>
         </table>
         
-        <!-- Mobile Controls -->
-        <div class="mobile-pair-controls">
-<div class="mobile-controls-container">
-    <div class="mobile-controls-box">
-        <button class="mobile-control-btn" id="mobilePauseButton" title="Pause">P</button>
-        <button class="mobile-control-btn" id="mobileRefreshButton" title="Refresh">
-            <svg class="reload-icon" width="16" height="16" viewBox="0 0 24 24">
-                <path d="M23 4v6h-6M1 20v-6h6" stroke="#f0b90b" stroke-width="2.5"/>
-                <path d="M3.5 9a9 9 0 0 1 14-5.5L23 10M1 14l4.5 4.5A9 9 0 0 0 20.5 15" stroke="#f0b90b" stroke-width="2.5"/>
-            </svg>
-        </button>
-        <button class="mobile-control-btn" id="mobileTVScreen" title="TradingView">T</button>
-        <button class="mobile-control-btn" id="mobileThemeToggle" title="Theme">
-            <i class="fas fa-moon"></i>
-        </button>
-        <button class="mobile-control-btn" id="mobileSettingsButton" title="Settings">
-            <i class="fas fa-cog"></i>
-        </button>
-    </div>
-    
-    <!-- Arrows Box - Keep your existing arrows -->
-    <div class="mobile-arrows-box">
-        <button class="mobile-arrow up" title="Show less">
-            <i class="fas fa-chevron-up"></i>
-        </button>
-        <button class="mobile-arrow down" title="Show more">
-            <i class="fas fa-chevron-down"></i>
-        </button>
+<!-- Mobile Controls -->
+<div class="mobile-pair-controls">
+    <div class="mobile-controls-container">
+        <div class="mobile-controls-box">
+            <button class="mobile-control-btn" id="mobilePauseButton" title="Pause">P</button>
+            <button class="mobile-control-btn" id="mobileRefreshButton" title="Refresh">
+                <svg class="reload-icon" width="16" height="16" viewBox="0 0 24 24">
+                    <path d="M23 4v6h-6M1 20v-6h6" stroke="#f0b90b" stroke-width="2.5"/>
+                    <path d="M3.5 9a9 9 0 0 1 14-5.5L23 10M1 14l4.5 4.5A9 9 0 0 0 20.5 15" stroke="#f0b90b" stroke-width="2.5"/>
+                </svg>
+            </button>
+            <button class="mobile-control-btn" id="mobileTVScreen" title="TradingView">T</button>
+            <button class="mobile-control-btn" id="mobileThemeToggle" title="Theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="mobile-control-btn" id="mobileSettingsButton" title="Settings">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+        
+        <div class="mobile-arrows-box">
+            <button class="mobile-arrow up" title="Show less">
+                <i class="fas fa-chevron-up"></i>
+            </button>
+            <button class="mobile-arrow down" title="Show more">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
     </div>
 </div>
-        </div>
         
         <!-- Show More Button -->
         <div class="show-more-container">
@@ -213,7 +211,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="src/js/icons.js" defer></script>
+    <script src="src/js/platformicons.js" defer></script>
     <script src="src/js/search.js" defer></script>
     <script src="src/js/fg-index.js" defer></script>
     <script src="src/js/feedback.js" defer></script>

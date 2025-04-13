@@ -18,7 +18,7 @@ const CONFIG = {
   },
   defaults: {
     visiblePairs: 20,
-    totalPairs: 100,
+    totalPairs: 150,
     highlightStorageKey: 'highlightedPairsData', // Key for localStorage
     highlightTimerInterval: 1000, // Update timer every second
     pricePrecision: {          // Keep your original precision rules
@@ -78,6 +78,15 @@ const state = {
         searchResults: document.getElementById('searchResults'),
     };
 
+// ===== NOTIFICATION SYSTEM =====
+function showRemovalNotification(symbol) {
+    const alert = document.createElement('div');
+    alert.className = 'pair-removed-alert';
+    alert.textContent = `✕ Removed ${symbol} (inactive)`;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 5000);
+}
+    
 // ===== FORMATTER =====
 const formatter = {
     price: (value, symbol) => {
@@ -260,34 +269,125 @@ dollarChange: (currentPrice, highlightPrice, symbol) => {
             }
         },
 
-        checkStalePairs: function() {
-            const STALE_THRESHOLD = 3600000;
-            const now = Date.now();
-            
-            state.data.forEach(pair => {
-                if (!pair.lastUpdated || (now - pair.lastUpdated > STALE_THRESHOLD)) {
-                    fetch(`${CONFIG.api.futures}/ticker/24hr?symbol=${pair.symbol}`)
-                        .then(res => {
-                            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                            return res.json();
-                        })
-                        .then(freshData => {
-                            if (freshData?.E && (!pair.lastUpdated || freshData.E > pair.lastUpdated)) {
-                                Object.assign(pair, {
-                                    lastPrice: freshData.lastPrice,
-                                    priceChangePercent: freshData.priceChangePercent,
-                                    quoteVolume: freshData.quoteVolume,
-                                    lastUpdated: freshData.E,
-                                    hadUpdate: true
-                                });
-                                ui.renderTable();
-                            }
-                        })
-                        .catch(err => console.warn(`Stale refresh failed for ${pair.symbol}:`, err));
-                }
-            });
-        },
 
+checkStalePairs: function() {
+    const STALE_THRESHOLD = 3600000; // 1 hour
+    const REMOVAL_THRESHOLD = 86400000; // 24 hours
+    const now = Date.now();
+    const initialCount = state.data.length;
+    
+    // 1. Remove stale pairs (with visual feedback)
+    const removedPairs = [];
+    state.data = state.data.filter(pair => {
+        if (!pair.lastUpdated || (now - pair.lastUpdated > REMOVAL_THRESHOLD)) {
+            console.log(`Removing stale pair: ${pair.symbol}`);
+            removedPairs.push(pair.symbol);
+            return false;
+        }
+        return true;
+    });
+
+    // Show removal notifications (batched)
+    if (removedPairs.length > 0) {
+        showRemovalNotification(removedPairs.join(', '));
+    }
+
+    // 2. Smart Replenishment System (NEW IMPROVED VERSION)
+    state.lastReplenish = state.lastReplenish || 0;
+    const needsReplenish = (
+        state.data.length < CONFIG.defaults.totalPairs && 
+        Date.now() - state.lastReplenish > 60000 &&
+        !state.isPaused
+    );
+
+    if (needsReplenish) {
+        const needed = CONFIG.defaults.totalPairs - state.data.length;
+        console.log(`Replenishing ${needed} pairs...`);
+
+        fetch(`${CONFIG.api.futures}/ticker/24hr`)
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
+            .then(allPairs => {
+                // Enhanced filtering with volume threshold
+                const newPairs = allPairs
+                    .filter(p => (
+                        p.symbol.endsWith('USDT') &&
+                        !state.data.some(existing => existing.symbol === p.symbol) &&
+                        parseFloat(p.quoteVolume) > 1000000 // Minimum $1M volume
+                    ))
+                    .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+                    .slice(0, needed)
+                    .map(p => ({
+                        ...p,
+                        hadUpdate: false,
+                        updateDirection: null,
+                        lastUpdated: Date.now(), // Mark as fresh
+                        isNew: true // Flag for animation
+                    }));
+
+                if (newPairs.length > 0) {
+                    state.data.push(...newPairs);
+                    state.data.sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
+                    
+                    // Visual feedback
+                    ui.renderTable(() => {
+                        ui.showTempMessage(`↻ Replenished ${newPairs.length} pairs`);
+                        animateNewPairs(newPairs);
+                    });
+                }
+                state.lastReplenish = Date.now();
+            })
+            .catch(err => {
+                console.error('Replenishment failed:', err);
+                ui.showTempMessage('⚠️ Replenishment failed (retrying...)');
+            });
+    }
+
+    // 3. Existing individual pair refresh logic
+    state.data.forEach(pair => {
+        if (!pair.lastUpdated || (now - pair.lastUpdated > STALE_THRESHOLD)) {
+            fetch(`${CONFIG.api.futures}/ticker/24hr?symbol=${pair.symbol}`)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(freshData => {
+                    if (freshData?.E && (!pair.lastUpdated || freshData.E > pair.lastUpdated)) {
+                        Object.assign(pair, {
+                            lastPrice: freshData.lastPrice,
+                            priceChangePercent: freshData.priceChangePercent,
+                            quoteVolume: freshData.quoteVolume,
+                            lastUpdated: freshData.E,
+                            hadUpdate: true
+                        });
+                        ui.renderTable();
+                    }
+                })
+                .catch(err => {
+                    console.warn(`Refresh failed for ${pair.symbol}:`, err);
+                    if (err.message.includes('404')) {
+                        state.data = state.data.filter(p => p.symbol !== pair.symbol);
+                        ui.renderTable();
+                    }
+                });
+        }
+    });
+
+    // New pair animation helper
+    function animateNewPairs(pairs) {
+        pairs.forEach(p => {
+            const row = document.querySelector(`tr[data-symbol="${p.symbol}"]`);
+            if (row) {
+                row.classList.add('new-pair');
+                setTimeout(() => row.classList.remove('new-pair'), 3000);
+            }
+        });
+    }
+},
+
+        
         cleanup: function() {
             if (state.stalePairInterval) {
                 clearInterval(state.stalePairInterval);
@@ -317,10 +417,11 @@ loadInitialData: async () => {
                 hadUpdate: false,
                 updateDirection: null
             }));
-            
+
         // Apply initial sort
         state.data.sort((a, b) => b.quoteVolume - a.quoteVolume);
         state.data = state.data.slice(0, CONFIG.defaults.totalPairs);
+        
         
         ui.renderTable();
     } catch (error) {
@@ -590,9 +691,10 @@ const ui = {
     },
 
     // ===== TABLE RENDERING =====
-    renderTable: (callback) => {    
-        // Sort data
-const sortedData = [...state.data];
+// ===== TABLE RENDERING =====
+renderTable: (callback) => {    
+    // Sort data
+    const sortedData = [...state.data];
     if (state.sortDirection.volume === 'asc') {
         sortedData.sort((a, b) => a.quoteVolume - b.quoteVolume);
     } else if (state.sortDirection.volume === 'desc') {
@@ -601,80 +703,84 @@ const sortedData = [...state.data];
         sortedData.sort((a, b) => parseFloat(a.priceChangePercent) - parseFloat(b.priceChangePercent));
     } else if (state.sortDirection.change === 'desc') {
         sortedData.sort((a, b) => parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent));
-}
+    }
 
-        // Apply pinning
-        const pinned = sortedData.filter(item => state.pinnedPairs.includes(item.symbol));
-        const unpinned = sortedData.filter(item => !state.pinnedPairs.includes(item.symbol));
-        const displayData = [...pinned, ...unpinned].slice(0, state.visibleCount);
-        
-        // Generate table rows
-elements.tableBody.innerHTML = displayData.map((item, index) => {
-    const isPinned = state.pinnedPairs.includes(item.symbol);
-    const isHighlighted = state.highlightedPairs[item.symbol];
-    const updateClass = item.hadUpdate ? `update-${item.updateDirection}` : '';
-    const changeClass = item.priceChangePercent >= 0 ? 'up' : 'down';
+    // Apply pinning
+    const pinned = sortedData.filter(item => state.pinnedPairs.includes(item.symbol));
+    const unpinned = sortedData.filter(item => !state.pinnedPairs.includes(item.symbol));
+    const displayData = [...pinned, ...unpinned].slice(0, state.visibleCount);
     
-    return `
-    <tr data-symbol="${item.symbol}" class="${updateClass} ${isPinned ? 'pinned-row' : ''}">
-        <td>
-            ${index + 1}
-        </td>
-        <td>
-            <span class="pin-icon" data-symbol="${item.symbol}">
-                ${isPinned ? '📌' : '🔅'}
-            </span>
-            ${item.symbol.replace('USDT', '')}
-        </td>
-        <td class="${isHighlighted ? 'highlighted' : ''}">
-            ${formatter.price(item.lastPrice, item.symbol)}
-        </td>
-        <td class="${changeClass}">
-            ${formatter.change(item.priceChangePercent)}
-        </td>
-        <td>${formatter.volume(item.quoteVolume)}</td>
-    </tr>
-    `;
-}).join('');
-
-        elements.loadingIndicator.textContent = '';
-        ui.attachRowEvents();
+    // Generate table rows
+    elements.tableBody.innerHTML = displayData.map((item, index) => {
+        const isPinned = state.pinnedPairs.includes(item.symbol);
+        const isHighlighted = state.highlightedPairs[item.symbol];
+        const updateClass = item.hadUpdate ? `update-${item.updateDirection}` : '';
+        const changeClass = item.priceChangePercent >= 0 ? 'up' : 'down';
+        const baseSymbol = item.symbol.replace('USDT', '').toLowerCase();
         
-// ===== NEW SORT INDICATORS CODE =====
-const volumeHeader = document.getElementById('sortHeader');
-const changeHeader = document.getElementById('changeHeader');
+        return `
+        <tr data-symbol="${item.symbol}" class="${updateClass} ${isPinned ? 'pinned-row' : ''}">
+            <td>
+                ${index + 1}
+            </td>
+            <td>
+                <span class="pin-icon" data-symbol="${item.symbol}">
+                    <img src="icons/cryptologos/${baseSymbol}.png" alt="${baseSymbol}" class="crypto-icon ${isPinned ? 'pinned-icon' : ''}" 
+                         onerror="this.onerror=null; this.src='icons/cryptologos/generic.png'">
+                </span>
+                ${item.symbol.replace('USDT', '')}
+            </td>
+            <td class="${isHighlighted ? 'highlighted' : ''}">
+                ${formatter.price(item.lastPrice, item.symbol)}
+            </td>
+            <td class="${changeClass}">
+                ${formatter.change(item.priceChangePercent)}
+            </td>
+            <td>${formatter.volume(item.quoteVolume)}</td>
+        </tr>
+        `;
+    }).join('');
 
-// Clear all active states
-volumeHeader.classList.remove('sort-active');
-changeHeader.classList.remove('sort-active');
+    elements.loadingIndicator.textContent = '';
+    ui.attachRowEvents();
+    
+    // Rest of the function remains the same...
+    const volumeHeader = document.getElementById('sortHeader');
+    const changeHeader = document.getElementById('changeHeader');
 
-if (state.sortDirection.volume) {
-    volumeHeader.classList.add('sort-active');
-    volumeHeader.querySelector('.sort-indicator').textContent = 
-        state.sortDirection.volume === 'desc' ? '↓' : '↑';
-    changeHeader.querySelector('.sort-indicator').textContent = '';
-} 
-else if (state.sortDirection.change) {
-    changeHeader.classList.add('sort-active');
-    changeHeader.querySelector('.sort-indicator').textContent = 
-        state.sortDirection.change === 'desc' ? '↓' : '↑';
-    volumeHeader.querySelector('.sort-indicator').textContent = '';
-}
-else {
-    volumeHeader.querySelector('.sort-indicator').textContent = '';
-    changeHeader.querySelector('.sort-indicator').textContent = '';
-}
-        //==Update highlight timers for all highlighted pairs==
-        Object.keys(state.highlightedPairs).forEach(symbol => {
+    // Clear all active states
+    volumeHeader.classList.remove('sort-active');
+    changeHeader.classList.remove('sort-active');
+
+    if (state.sortDirection.volume) {
+        volumeHeader.classList.add('sort-active');
+        volumeHeader.querySelector('.sort-indicator').textContent = 
+            state.sortDirection.volume === 'desc' ? '↓' : '↑';
+        changeHeader.querySelector('.sort-indicator').textContent = '';
+    } 
+    else if (state.sortDirection.change) {
+        changeHeader.classList.add('sort-active');
+        changeHeader.querySelector('.sort-indicator').textContent = 
+            state.sortDirection.change === 'desc' ? '↓' : '↑';
+        volumeHeader.querySelector('.sort-indicator').textContent = '';
+    }
+    else {
+        volumeHeader.querySelector('.sort-indicator').textContent = '';
+        changeHeader.querySelector('.sort-indicator').textContent = '';
+    }
+    
+    // Update highlight timers for all highlighted pairs
+    Object.keys(state.highlightedPairs).forEach(symbol => {
         if (state.highlightedPairs[symbol]?.isHighlighted) {
             ui.updateHighlightTimer(symbol);
         }
     });        
-        // Execute callback after render is complete
-        if (callback && typeof callback === 'function') {
-            setTimeout(callback, 0);
-        }
-    },
+    
+    // Execute callback after render is complete
+    if (callback && typeof callback === 'function') {
+        setTimeout(callback, 0);
+    }
+},
 
 attachRowEvents: () => {
     document.querySelectorAll('#data tr').forEach(row => {
@@ -745,7 +851,6 @@ toggleHighlight: (symbol, fromPriceClick = false) => {
             if (priceCell) {
                 const priceText = priceCell.textContent.trim();
                 navigator.clipboard.writeText(priceText.replace(/[^\d.]/g, ''));
-                ui.showTempMessage(`Copied: ${priceText}`);
             }
         }
     } else {
@@ -1060,6 +1165,7 @@ const isMobile = {
 // Initialize with device-specific settings
 const init = () => {
     document.title = "🟡 • Loading...";
+    
     // Mobile-specific adjustments
     if (isMobile.any()) {
         // Reduce animation intensity on mobile
@@ -1074,38 +1180,60 @@ const init = () => {
                 btn.classList.remove('touch-active');
             });
         });
+    } 
+    // Desktop-specific adjustments
+    else {
+        // Enable hover effects
+        document.documentElement.classList.add('desktop');
+        // More aggressive animations
+        document.documentElement.style.setProperty('--animation-duration', '3000ms');
     }
-    
-// Add robust search button handler
-const searchButton = document.getElementById('searchButton');
-if (searchButton) {
-    searchButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (elements.searchContainer.style.display === 'block') {
-            searchManager.hideSearch();
-        } else {
-            searchManager.showSearch();
-            // Move focus to input only if not already focused
-            if (document.activeElement !== elements.searchInput) {
-                elements.searchInput.focus();
+
+    // Search button handler
+    const searchButton = document.getElementById('searchButton');
+    if (searchButton) {
+        searchButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (elements.searchContainer.style.display === 'block') {
+                searchManager.hideSearch();
+            } else {
+                searchManager.showSearch();
+                if (document.activeElement !== elements.searchInput) {
+                    elements.searchInput.focus();
+                }
             }
+        });
+    }
+
+    // Connection and stale pair checking setup
+    connectionManager.connect();
+    
+    // Set up stale pair checking interval (for both mobile and desktop)
+    state.stalePairInterval = setInterval(() => {
+        connectionManager.checkStalePairs();
+    }, 300000); // 5 minutes
+
+    // Debug tools
+    window.debugTools = {
+        checkStale: () => connectionManager.checkStalePairs(),
+        listStale: () => {
+            const now = Date.now();
+            return state.data
+                .map(p => ({
+                    symbol: p.symbol,
+                    staleHours: (now - (p.lastUpdated || 0)) / 3600000,
+                    lastUpdated: p.lastUpdated ? new Date(p.lastUpdated).toISOString() : 'Never'
+                }))
+                .sort((a, b) => b.staleHours - a.staleHours);
         }
-    });
-}
-    
-// Desktop-specific adjustments
-else {
-    // Enable hover effects
-    document.documentElement.classList.add('desktop');
-    // More aggressive animations
-    document.documentElement.style.setProperty('--animation-duration', '3000ms');
-}
-    
+    };
+    console.log("Debug tools available: debugTools.checkStale(), debugTools.listStale()");
+
+    // Initialize remaining components
     ui.setupControls();
     setupMobileButtons();
-    connectionManager.connect();
     searchManager.init();
 };
     
@@ -1113,82 +1241,87 @@ else {
 // Improved mobile button setup with better touch handling
 function setupMobileButtons() {
     if (isMobile.any()) {
-        // Helper function to simulate click with touch feedback
-        const simulateClickWithFeedback = (element, targetId) => {
-            const target = document.getElementById(targetId);
-            if (!target) return;
-            
-            // Add touch feedback
-            element.classList.add('touch-active');
-            setTimeout(() => element.classList.remove('touch-active'), 200);
-            
-            // Trigger the click
-            target.click();
+        // Connect mobile buttons to their desktop counterparts
+        const buttonMap = {
+            'mobilePauseButton': 'pauseButton',
+            'mobileRefreshButton': 'refreshButton',
+            'mobileTVScreen': 'TVScreen',
+            'mobileThemeToggle': 'themeToggle',
+            'mobileSettingsButton': 'settingsButton'
         };
-        
-        // Connect mobile buttons to same functionality as desktop
-        document.getElementById('mobilePauseButton')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            simulateClickWithFeedback(e.currentTarget, 'pauseButton');
+
+        // Add touch feedback and click handlers
+        Object.keys(buttonMap).forEach(mobileId => {
+            const mobileBtn = document.getElementById(mobileId);
+            const desktopBtn = document.getElementById(buttonMap[mobileId]);
+            
+            if (mobileBtn && desktopBtn) {
+                // Touch feedback
+                mobileBtn.addEventListener('touchstart', () => {
+                    mobileBtn.classList.add('touch-active');
+                });
+                
+                mobileBtn.addEventListener('touchend', () => {
+                    mobileBtn.classList.remove('touch-active');
+                });
+                
+                // Click handler
+                mobileBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    desktopBtn.click();
+                });
+            }
         });
-        
-        document.getElementById('mobileRefreshButton')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            simulateClickWithFeedback(e.currentTarget, 'refreshButton');
-        });
-        
-        document.getElementById('mobileTVScreen')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            simulateClickWithFeedback(e.currentTarget, 'TVScreen');
-        });
-        
-        document.getElementById('mobileThemeToggle')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            simulateClickWithFeedback(e.currentTarget, 'themeToggle');
-        });
-        
-        document.getElementById('mobileSettingsButton')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            simulateClickWithFeedback(e.currentTarget, 'settingsButton');
-        });
-        
-        // Arrow buttons - FIXED VERSION
+
+        // Special handling for arrow buttons
         document.querySelector('.mobile-arrow.up')?.addEventListener('click', (e) => {
             e.preventDefault();
-            // Directly call showLessPairs instead of simulating click
-            const showLessPairs = () => {
-                const previousCount = state.visibleCount;
-                state.visibleCount = Math.max(state.visibleCount - 5, 5);
+            // Directly call showLessPairs
+            const previousCount = state.visibleCount;
+            state.visibleCount = Math.max(state.visibleCount - 5, 5);
+            
+            if (state.visibleCount !== previousCount) {
+                const lastVisibleRow = document.querySelector(`#data tr:nth-child(${state.visibleCount})`);
+                const lastRowPosition = lastVisibleRow ? lastVisibleRow.getBoundingClientRect().top : 0;
                 
-                if (state.visibleCount !== previousCount) {
-                    const lastVisibleRow = document.querySelector(`#data tr:nth-child(${state.visibleCount})`);
-                    const lastRowPosition = lastVisibleRow ? lastVisibleRow.getBoundingClientRect().top : 0;
-                    
-                    ui.renderTable(() => {
-                        if (state.visibleCount > 5) {
-                            const newLastRow = document.querySelector(`#data tr:nth-child(${state.visibleCount})`);
-                            if (newLastRow) {
-                                const currentPosition = newLastRow.getBoundingClientRect().top;
-                                window.scrollBy({
-                                    top: currentPosition - lastRowPosition,
-                                    behavior: 'smooth'
-                                });
-                            }
-                        } else {
-                            window.scrollTo({
-                                top: 0,
+                ui.renderTable(() => {
+                    if (state.visibleCount > 5) {
+                        const newLastRow = document.querySelector(`#data tr:nth-child(${state.visibleCount})`);
+                        if (newLastRow) {
+                            const currentPosition = newLastRow.getBoundingClientRect().top;
+                            window.scrollBy({
+                                top: currentPosition - lastRowPosition,
                                 behavior: 'smooth'
                             });
                         }
-                    });
-                }
-            };
-            showLessPairs();
+                    } else {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            }
         });
-        
+
         document.querySelector('.mobile-arrow.down')?.addEventListener('click', (e) => {
             e.preventDefault();
-            simulateClickWithFeedback(e.currentTarget, 'showMoreButton');
+            // Directly call showMorePairs
+            const previousCount = state.visibleCount;
+            state.visibleCount = Math.min(state.visibleCount + 5, CONFIG.defaults.totalPairs);
+            
+            if (state.visibleCount !== previousCount) {
+                ui.renderTable(() => {
+                    const rows = document.querySelectorAll('#data tr');
+                    if (rows.length > 0) {
+                        rows[rows.length - 1].scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'nearest'
+                        });
+                    }
+                    ui.showTempMessage(`Showing ${state.visibleCount} pairs`);
+                });
+            }
         });
     }
 }
