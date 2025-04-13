@@ -87,29 +87,35 @@
 <div class="mobile-pair-controls">
     <div class="mobile-controls-container">
         <div class="mobile-controls-box">
-            <button class="mobile-control-btn" id="mobilePauseButton" title="Pause">P</button>
-            <button class="mobile-control-btn" id="mobileRefreshButton" title="Refresh">
-                <svg class="reload-icon" width="16" height="16" viewBox="0 0 24 24">
+            
+            
+
+            <div class="mobile-menu">
+    <div class="mobile-controls-box" id="mobileControlsBox" style="display: none;">
+        <button class="mobile-control-btn" id="mobilePauseButton" title="Pause">P</button>
+        <button class="mobile-control-btn" id="mobileRefreshButton" title="Refresh">
+                        <svg class="reload-icon" width="16" height="16" viewBox="0 0 24 24">
                     <path d="M23 4v6h-6M1 20v-6h6" stroke="#f0b90b" stroke-width="2.5"/>
                     <path d="M3.5 9a9 9 0 0 1 14-5.5L23 10M1 14l4.5 4.5A9 9 0 0 0 20.5 15" stroke="#f0b90b" stroke-width="2.5"/>
                 </svg>
-            </button>
-            <button class="mobile-control-btn" id="mobileTVScreen" title="TradingView">T</button>
-            <button class="mobile-control-btn" id="mobileThemeToggle" title="Theme">
-                <i class="fas fa-moon"></i>
-            </button>
-            <button class="mobile-control-btn" id="mobileSettingsButton" title="Settings">
-                <i class="fas fa-cog"></i>
-            </button>
-        </div>
-        
-        <div class="mobile-arrows-box">
+        </button>
+        <button class="mobile-control-btn" id="mobileTVScreen" title="TradingView">T</button>
+        <button class="mobile-control-btn" id="mobileThemeToggle" title="Theme"><i class="fas fa-moon"></i></button>
+        <button class="mobile-control-btn" id="mobileSettingsButton" title="Settings"><i class="fas fa-cog"></i></button>
+    </div>
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+                        
+                <div class="mobile-arrows-box">
             <button class="mobile-arrow up" title="Show less">
                 <i class="fas fa-chevron-up"></i>
             </button>
             <button class="mobile-arrow down" title="Show more">
                 <i class="fas fa-chevron-down"></i>
             </button>
+        </div>
+
+</div>
+
         </div>
     </div>
 </div>
