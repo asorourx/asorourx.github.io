@@ -535,37 +535,43 @@ init: function () {
     // Handle keyboard navigation in search results
 // In searchManager.init()
 // In searchManager.init() - update the keydown handler
+// Replace the current keydown handler with this:
 elements.searchInput.addEventListener('keydown', (e) => {
     const items = Array.from(elements.searchResults.querySelectorAll('.coin-item'));
     
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default scrolling behavior
         
-        // If no item is focused and this is first arrow down
-        if (document.activeElement === elements.searchInput && e.key === 'ArrowDown' && items.length > 0) {
-            items[0].focus();
-            items[0].scrollIntoView({ block: 'nearest' });
-            return;
-        }
-        
+        if (!items.length) return;
+
+        // Get current focused item
         const currentActive = document.activeElement;
         let currentIndex = items.indexOf(currentActive);
         
         if (e.key === 'ArrowDown') {
             const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
             items[nextIndex].focus();
-            items[nextIndex].scrollIntoView({ block: 'nearest' });
+            // Scroll the search results container, not the page
+            items[nextIndex].scrollIntoView({ 
+                block: 'nearest',
+                behavior: 'smooth',
+                inline: 'nearest'
+            });
         } 
         else if (e.key === 'ArrowUp') {
             if (currentIndex <= 0) {
                 elements.searchInput.focus();
             } else {
                 items[currentIndex - 1].focus();
-                items[currentIndex - 1].scrollIntoView({ block: 'nearest' });
+                items[currentIndex - 1].scrollIntoView({ 
+                    block: 'nearest',
+                    behavior: 'smooth',
+                    inline: 'nearest'
+                });
             }
         }
     }
-    else if (e.key === 'Enter' && items.length > 0) {
+    else if (e.key === 'Enter') {
         e.preventDefault();
         const focusedItem = document.activeElement;
         if (items.includes(focusedItem)) {
@@ -577,6 +583,7 @@ elements.searchInput.addEventListener('keydown', (e) => {
 });
 
     // Debounced search input
+// Replace the current search input event listener with this:
 elements.searchInput.addEventListener('input', debounce((e) => {
     const query = e.target.value.trim().toUpperCase();
     if (!query) {
@@ -592,15 +599,7 @@ elements.searchInput.addEventListener('input', debounce((e) => {
     }).slice(0, 10);
 
     this.renderResults(filtered);
-    
-    // Auto-focus first result if available
-    setTimeout(() => {
-        const firstItem = elements.searchResults.querySelector('.coin-item');
-        if (firstItem && document.activeElement === elements.searchInput) {
-            firstItem.focus();
-        }
-    }, 50);
-    }, 300));
+}, 300));
 },
 
 showSearch: function () {
@@ -623,48 +622,58 @@ hideSearch: function () {
     document.getElementById('searchButton').focus();
 },
 
-renderResults: function (results) {
+renderResults: function(results) {
     elements.searchResults.innerHTML = '';
     
     if (!results || results.length === 0) {
-        elements.searchResults.innerHTML = `
-            <div class="no-results">
-                <div>No matching pairs found</div>
-                <small>Try a different search term</small>
-            </div>
-        `;
+        elements.searchResults.innerHTML = [
+            '<div class="no-results">',
+            '<div>No matching pairs found</div>',
+            '<small>Try a different search term</small>',
+            '</div>'
+        ].join('');
         elements.searchResults.style.display = 'block';
         return;
     }
 
-    // Ensure container is properly sized before rendering
-    elements.searchResults.style.maxHeight = '60vh';
-    elements.searchResults.style.display = 'block';
-
-    results.forEach((item, index) => {
-        const resultItem = document.createElement('div');
+    results.forEach(function(item) {
+        var baseSymbol = item.symbol.replace('USDT', '').toLowerCase();
+        var resultItem = document.createElement('div');
         resultItem.className = 'coin-item';
-        resultItem.dataset.symbol = item.symbol;
         resultItem.tabIndex = 0;
-        resultItem.innerHTML = `
-            <div class="coin-content">
-                <span class="pair-name">${item.symbol.replace('USDT', '')}</span>
-                ${getPlatformIcons(item.symbol)}
-            </div>
-            <span class="price">${formatter.price(item.lastPrice, item.symbol)}</span>
-        `;
+resultItem.innerHTML = [
+    '<div class="coin-content">',
+    '<img src="icons/cryptologos/', baseSymbol, '.png" ',
+    'onerror="this.onerror=null;this.src=\'icons/cryptologos/generic.png\'" ',
+    'class="search-crypto-icon" width="18" height="18">',
+    '<span class="pair-name">', item.symbol.replace('USDT', ''), '</span>',
+    '</div>',
+    '<div class="price-section">',
+    '<span class="price">', formatter.price(item.lastPrice, item.symbol), '</span>',
+    '<div class="platform-icons">',
+    '<a href="https://www.bybit.com/future/', baseSymbol, '-USDT" target="_blank" class="platform-link">',
+    '<img src="icons/platforms/bybit.png" width="18" height="18" alt="KuCoin">',
+    '</a>',
+    '<a href="https://www.binance.com/en/trade/', baseSymbol, '_USDT" target="_blank" class="platform-link">',
+    '<img src="icons/platforms/binance.png" width="18" height="18" alt="Binance">',
+    '</a>',
+    '<a href="https://www.gateio.com/future/', baseSymbol, '-USDT" target="_blank" class="platform-link">',
+    '<img src="icons/platforms/gateio.png" width="18" height="18" alt="KuCoin">',
+    '</a>',
+    '<a href="https://www.tradingview.com/future/', baseSymbol, '-USDT" target="_blank" class="platform-link">',
+    '<img src="icons/platforms/WTV.png" width="18" height="18" alt="KuCoin">',
+    '</a>',
+    '</div>',
+    '</div>'
+].join('');
         
-        resultItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.handleSelect(item.symbol);
-            this.hideSearch();
+        resultItem.addEventListener('click', function() {
+            searchManager.handleSelect(item.symbol);
         });
-        
         elements.searchResults.appendChild(resultItem);
     });
     
-    // Auto-scroll to top when new results come in
-    elements.searchResults.scrollTop = 0;
+    elements.searchResults.style.display = 'block';
 },
 
     handleSelect: function (symbol) {

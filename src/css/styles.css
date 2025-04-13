@@ -434,8 +434,8 @@ tr:hover {
     top: 50px;
     left: 50%;
     transform: translateX(-50%);
-    width: 400px; /* Reduced from 80% to fixed width */
-    max-width: 80%; /* Ensure it doesn't overflow on mobile */
+    width: 400px;
+    max-width: 80%;
     z-index: 1000;
     background: #2a2f3d;
     padding: 10px;
@@ -443,6 +443,8 @@ tr:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     border: 1px solid #3a3f4d;
     display: none;
+    max-height: 80vh;
+    overflow: hidden;
 }
 /* Search button specific styles */
 #searchButton {
@@ -486,12 +488,14 @@ tr:hover {
 }
 /* Search Results */
 #searchResults {
-    max-height: 60vh;
+    max-height: calc(80vh - 60px); /* Account for input and padding */
     overflow-y: auto;
     border-radius: 4px;
     background: #1a1e27;
     border: 1px solid #3a3f4d;
     display: none;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
 	
 }
 #searchButton::after {
@@ -523,29 +527,38 @@ tr:hover {
     min-width: 80px; /* Prevent squeezing */
 }
 /* Coin Item Layout */
+/* Replace existing .coin-item styles with: */
 .coin-item {
     display: grid;
-    grid-template-columns: minmax(120px, 1fr) auto minmax(80px, auto);
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-	cursor: pointer;
+    grid-template-columns: 1fr auto;
+    gap: 2px;
     padding: 8px 12px;
-    outline: none;
-    transition: background-color 0.2s;
+    align-items: center;
 }
-.coin-item:focus {
-    outline: 1px solid #f0b90b;
-    background-color: #3a3f4d;
+
+.price-section {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
-.coin-item:hover,
-.coin-item.selected {
-	background: #3a3f4d;
+
+.platform-icons {
+    display: flex;
+    gap: 6px;
 }
+
+.pair-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px; /* Adjust as needed */
+}
+
 .coin-content {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 2px;
+    min-width: 0; /* Allows text truncation */
 }
 /* Price - Right aligned */
 .price {
@@ -667,7 +680,8 @@ tr:hover {
 /* Platform Icons */
 .platform-icons {
     display: flex;
-    gap: 6px;
+    gap: 2px;
+    margin-left: 4px;
     justify-content: center;
     flex-wrap: nowrap;
     min-width: 100px; /* Fixed width for icon container */
@@ -677,14 +691,6 @@ tr:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-}
-
-.platform-icon img {
-    width: 18px;
-    height: 18px;
-    object-fit: contain;
-    transition: all 0.2s ease;
-    opacity: 0.8;
 }
 
 .platform-icon:hover img {
@@ -713,6 +719,15 @@ tr:hover {
 	transition: all 0.2s;
 	opacity: 0.8;
 }
+/*
+.platform-icon img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+*/
 
 .platform-icon:hover img {
 	opacity: 1;
@@ -1201,47 +1216,6 @@ tr:hover {
     transition: all 0.2s ease;
 }
 
-@media (max-width: 768px) {
-	.highlight-container {
-		min-width: 120px;
-		/* Smaller fixed width on mobile */
-	}
-
-	.dollar-change-value {
-		width: 60px;
-		/* Smaller width on mobile */
-	}
-
-	.highlight-timer {
-		width: 50px;
-		/* Smaller width on mobile */
-	}    
-    th:nth-child(5),
-    td:nth-child(5) {
-        min-width: 150px; /* Slightly smaller minimum for mobile */
-    }
-    
-    /* Ensure buttons remain visible */
-    .header-button, 
-    .connection-indicator, 
-    #fearGreedGauge {
-        width: 25px; /* Slightly smaller buttons */
-        height: 25px;
-        font-size: 14px;
-    }
-}
-/* Prevent text from wrapping */
-.volume-text {
-    white-space: nowrap;
-    margin-right: auto; /* Push buttons to the right */
-}
-@media (max-width: 768px) {
-	.tradingview-widget-container {
-		right: 250px;
-		/* Give more space for buttons */
-	}
-}
-
 .tradingview-widget-container__widget {
 	height: 100%;
 	width: 100%;
@@ -1463,6 +1437,8 @@ body.light-theme .fa-moon {
 #fearGreedGauge {
 	cursor: pointer;
 	transition: transform 0.2s ease;
+    transform: translateY(-2%); /* Fine-tune this percentage */
+
 }
 
 #fearGreedGauge:hover {
@@ -1607,35 +1583,139 @@ button.touch-active {
     user-select: none; /* Prevent text selection when tapping */
 }
 
-/* Show only on mobile/tablet */
-@media (max-width: 1024px) {
-    .mobile-controls-container {
-        display: flex !important;
-    }
-    
-    /* Hide desktop buttons except search, status, gauge */
-    .header-buttons > *:not(#searchButton):not(#connectionIndicator):not(#fearGreedGauge) {
-        display: none;
-    }
-    .mobile-control-btn, 
-    .mobile-arrow {
-        pointer-events: auto !important;
-    }
+/* Base styles for all views */
+.volume-header-container {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Default gap */
 }
 
-/* Hide completely on desktop */
-@media (min-width: 1025px) {
-    .mobile-controls-container {
-        display: none !important;
-    }
+.header-buttons {
+  display: flex;
+  gap: 6px; /* Default button spacing */
+  align-items: center;
 }
+
+/* Tablet/Small Desktop (1200px and below) */
+@media (max-width: 1200px) {
+  .volume-header-container {
+    gap: 8px;
+  }
+  
+  .header-buttons {
+    gap: 4px;
+    margin-left: 0;
+  }
+  
+  #fearGreedGauge {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* iPad/Tablet (1024px and below) */
+@media (max-width: 1024px) {
+  .volume-header-container {
+    gap: 6px;
+  }
+  
+  .header-buttons {
+    gap: 3px;
+  }
+  
+  #sortHeader {
+    padding-right: 0;
+  }
+  
+  /* Show mobile controls */
+  .mobile-controls-container {
+    display: flex !important;
+    gap: 6px;
+  }
+  
+  /* Hide non-essential desktop buttons */
+  .header-buttons > *:not(#searchButton):not(#connectionIndicator):not(#fearGreedGauge) {
+    display: none;
+  }
+  
+  /* Gauge adjustments */
+  #fearGreedGauge {
+    width: 38px;
+    height: 45px;
+    font-size: 20px;
+    margin-left: 2px;
+    transform: translateY(25%);
+  }
+  
+  .gauge-container {
+    width: 54px;
+    height: 35px;
+  }
+}
+
+/* Mobile Phones (768px and below) */
+@media (max-width: 768px) {
+  .volume-header-container {
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+  
+  .volume-text {
+    white-space: nowrap;
+    margin-right: 2px;
+    font-size: 0.9em; /* Slightly smaller text */
+  }
+  
+  /* Tighten button spacing */
+  .header-buttons {
+    gap: 2px;
+    margin-left: -1px; /* Negative margin for tight fit */
+  }
+  
+  /* Adjust gauge for mobile */
+  #fearGreedGauge {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    transform: translateY(15%);
+  }
+  
+  /* Column width adjustments */
+  th:nth-child(5),
+  td:nth-child(5) {
+    min-width: 150px;
+  }
+  
+  /* TradingView widget adjustment */
+  .tradingview-widget-container {
+    right: 250px;
+  }
+}
+
+/* Small Mobile (600px and below) - Emergency measures */
+@media (max-width: 600px) {
+  .volume-text {
+    display: none; /* Hide text if absolutely necessary */
+  }
+  
+  .header-buttons {
+    gap: 1px;
+  }
+  
+  #fearGreedGauge {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+}
+
 
 /* Crypto Icon Styles */
 .crypto-icon {
     width: 20px;
     height: 20px;
     vertical-align: middle;
-    margin-right: 5px;
+    margin-right: 2px;
     opacity: 0.7;
     transition: all 0.2s ease;
 }
@@ -1653,7 +1733,7 @@ button.touch-active {
     opacity: 1;
     border: 1px solid #ffc200;
     border-radius: 50%;
-    padding: 2px;
+    padding: 1;
     box-shadow: 0 0 5px rgba(240, 185, 11, 0.5);
 }
 
@@ -1676,4 +1756,31 @@ button.touch-active {
     border-radius: 4px;
     z-index: 1000;
     animation: fadeIn 0.3s;
+}
+
+/* Search Bar Pair Icons*/
+.search-crypto-icon {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    margin-right: 8px;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.platform-link {
+    display: inline-block;
+    margin-left: 8px;
+    text-decoration: none;
+}
+
+.platform-link img {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.platform-link:hover img {
+    opacity: 1;
 }
