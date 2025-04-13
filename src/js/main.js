@@ -1312,7 +1312,24 @@ function setupMobileButtons() {
     }
 }
 
+    // ===== MOBILE MENU TOGGLE =====
+const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+const mobileControlsBox = document.getElementById('mobileControlsBox');
+
+if (mobileMenuToggle && mobileControlsBox) {
+    mobileMenuToggle.addEventListener('click', () => {
+        const isVisible = mobileControlsBox.style.display === 'flex';
+        mobileControlsBox.style.display = isVisible ? 'none' : 'flex';
+    });
+}
     
+    document.addEventListener('click', (e) => {
+    if (!mobileMenuToggle.contains(e.target) && !mobileControlsBox.contains(e.target)) {
+        mobileControlsBox.style.display = 'none';
+    }
+});
+
+
     // Cleanup
     window.addEventListener('beforeunload', () => {
         // Clear highlight timers

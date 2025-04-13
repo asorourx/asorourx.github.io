@@ -1445,10 +1445,8 @@ body.light-theme .fa-moon {
 }
 
 #fearGreedGauge {
-	cursor: pointer;
-	transition: transform 0.2s ease;
-    transform: translateY(-2%); /* Fine-tune this percentage */
-
+    width: 50px;
+    height: 28px;
 }
 
 #fearGreedGauge:hover {
@@ -1527,14 +1525,13 @@ button.touch-active {
 /* Mobile Controls Container */
 .mobile-controls-container {
     position: fixed;
-    right: 5px;
-    bottom: 20px;
+    right: 10px;
+    bottom: 100px;
     display: none;
     flex-direction: column;
     gap: 15px;
     z-index: 1000;
 }
-
 /* Controls Box */
 .mobile-controls-box {
     background: none;
@@ -1549,14 +1546,11 @@ button.touch-active {
 
 /* Arrows Box */
 .mobile-arrows-box {
-    background: none;
-    border: none;
-    border-radius: 0;
-    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    box-shadow: none;
+    gap: 8px;
+    margin-top: 6px;
+    align-items: flex-end;
 }
 
 /* Control Buttons */
@@ -1577,20 +1571,19 @@ button.touch-active {
 
 /* Arrow Buttons */
 .mobile-arrow {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
     background: #2a2f3d;
-    border: 1px solid #f0b90b;
     color: #f0b90b;
+    border: 1px solid #f0b90b;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    font-size: 15px;
-    transition: all 0.2s;
-	pointer-events: auto !important; /* Ensure buttons are clickable */
-    user-select: none; /* Prevent text selection when tapping */
+    width: 40px;
+    height: 40px;
 }
 
 /* Base styles for all views */
@@ -1618,14 +1611,14 @@ button.touch-active {
   }
   
   #fearGreedGauge {
-    width: 38px;
-    height: 38px;
+        margin-left: 4px; /* Slight spacing adjustment */
   }
 }
 
 /* iPad/Tablet (1024px and below) */
 @media (max-width: 1024px) {
   .volume-header-container {
+     margin-left: 3px;
     gap: 6px;
   }
   
@@ -1647,14 +1640,8 @@ button.touch-active {
   .header-buttons > *:not(#searchButton):not(#connectionIndicator):not(#fearGreedGauge) {
     display: none;
   }
-  
-  /* Gauge adjustments */
-  #fearGreedGauge {
-    width: 38px;
-    height: 45px;
-    font-size: 20px;
-    margin-left: 2px;
-    transform: translateY(25%);
+    #fearGreedGauge {
+    transform: translateY(-5%);
   }
   
   .gauge-container {
@@ -1682,14 +1669,7 @@ button.touch-active {
     margin-left: -1px; /* Negative margin for tight fit */
   }
   
-  /* Adjust gauge for mobile */
-  #fearGreedGauge {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-    transform: translateY(15%);
-  }
-  
+    
   /* Column width adjustments */
   th:nth-child(5),
   td:nth-child(5) {
@@ -1713,9 +1693,8 @@ button.touch-active {
   }
   
   #fearGreedGauge {
-    width: 34px;
-    height: 34px;
-    font-size: 15px;
+    width: 40px;
+    height: 40px;
   }
 }
 
@@ -1794,3 +1773,36 @@ button.touch-active {
 .platform-link:hover img {
     opacity: 1;
 }
+
+
+
+/*Mobile Menu*/
+.mobile-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.mobile-menu-toggle {
+    background: #2a2f3d;
+    color: #f0b90b;
+    border: 1px solid #f0b90b;
+    border-radius: 4px;
+    font-size: 17px;
+    padding: 4px 12px;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+    transition: background 0.2s;
+}
+
+.mobile-controls-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #1a1e27;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid #4d3a3f;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
