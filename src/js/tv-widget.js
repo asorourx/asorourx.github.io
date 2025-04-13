@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Toggle visibility
     function toggleTradingView() {
+        if (state.isNotesModalOpen) return;
         const isVisible = tvContainer.style.display === 'none';
         tvContainer.style.display = isVisible ? 'block' : 'none';
         localStorage.setItem('tvWidgetVisible', isVisible);
