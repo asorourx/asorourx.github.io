@@ -17,23 +17,26 @@ body {
 }
 
 #app {
-	max-width: 1000px;
-	margin: 0 auto;
+    max-width: 1000px;
+    margin: 0 auto;
+    min-height: calc(100vh - 20px); /* Fill viewport minus small gap */
+    display: flex;
+    flex-direction: column;
 }
 
 /* Table Styles */
 table {
-	table-layout: fixed;
-	/* Set your desired minimum table width */
-	overflow-x: auto;
+    table-layout: fixed;
+    overflow-x: auto;
     overflow-y: auto;
-	display: block;
-	width: 100%;
-    max-width: 1000px; /* Must match widget's max-width */
+    display: block;
+    width: 100%;
+    max-width: 1000px;
     margin: 0 auto;
-	white-space: nowrap; /* Prevent line breaks */
+    white-space: nowrap;
     min-width: 100%;
-    max-height: 80vh; /* allows scrolling within the table */
+    max-height: calc(100vh - 100px); /* Adjust based on your header height */
+    flex-grow: 1; /* Makes table expand to fill available space */
 
 }
 thead {
@@ -1400,7 +1403,139 @@ body.light-theme .theme-toggle-button {
 	color: #333;
 	border-color: #333;
 }
+/* Add these to your styles.css file */
 
+/* Search Container - Theme Adjustments */
+body.light-theme .search-container {
+    background: #f0f0f0;
+    border-color: #d0d0d0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme #searchInput {
+    background: #ffffff;
+    color: #333;
+    border-color: #d0d0d0;
+}
+
+body.light-theme #searchInput:focus {
+    border-color: #f0b90b;
+    box-shadow: 0 0 0 2px rgba(240, 185, 11, 0.2);
+}
+
+body.light-theme #searchResults {
+    background: #ffffff;
+    border-color: #d0d0d0;
+}
+
+body.light-theme .coin-item {
+    border-bottom: 1px solid #eaeaea;
+}
+
+body.light-theme .coin-item:hover {
+    background: #f5f5f5;
+}
+
+/* Fear & Greed Popup - Theme Adjustments */
+body.light-theme .fear-greed-popup {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+}
+
+body.light-theme .fear-greed-popup-header {
+    border-bottom-color: #e0e0e0;
+}
+
+body.light-theme .fear-greed-popup-stat-item {
+    background: #e0e0e0;
+    color: #333;
+}
+
+body.light-theme .fear-greed-popup-stat-label {
+    color: #666;
+}
+
+body.light-theme .fear-greed-popup-value {
+    border-bottom-color: #e0e0e0;
+}
+
+body.light-theme .update-info {
+    color: #666;
+}
+
+/* Gauge - Theme Adjustments */
+body.light-theme .gauge-container {
+    background: transparent;
+}
+
+body.light-theme .value-text {
+    fill: #333;
+}
+
+/* Modal - Theme Adjustments */
+body.light-theme .pair-detail-modal .modal-content {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+}
+
+body.light-theme .pair-detail-modal .stat-item {
+    background: #e0e0e0;
+}
+
+body.light-theme .pair-detail-modal .stat-label {
+    color: #666;
+}
+
+/* Settings Panel - Theme Adjustments */
+body.light-theme .settings-panel {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+}
+
+body.light-theme .settings-header {
+    border-bottom-color: #e0e0e0;
+}
+
+body.light-theme .setting-item label {
+    color: #333;
+}
+
+/* TradingView Widget - Theme Adjustment */
+body.light-theme .tradingview-widget-container {
+    background: #f5f5f5;
+}
+
+/* Mobile Controls - Theme Adjustments */
+body.light-theme .mobile-controls-box {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+}
+
+body.light-theme .mobile-control-btn {
+    background: #e0e0e0;
+    color: #333;
+    border-color: #333;
+}
+
+body.light-theme .mobile-arrow {
+    background: #e0e0e0;
+    color: #333;
+    border-color: #333;
+}
+
+/* Platform Icons - Theme Adjustments */
+body.light-theme .platform-icons img {
+    filter: brightness(0.8);
+}
+
+body.light-theme .platform-icons img:hover {
+    filter: brightness(1);
+}
+
+/* No Results Text - Theme Adjustment */
+body.light-theme .no-results {
+    color: #666;
+}
 /* Icon states */
 body:not(.light-theme) .fa-sun,
 body.light-theme .fa-moon {
@@ -1805,4 +1940,3 @@ button.touch-active {
     border: 1px solid #4d3a3f;
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
-
