@@ -523,6 +523,25 @@ init: function () {
         }
     });
 
+    document.addEventListener('keydown', (e) => {
+    // Only trigger search shortcut if not in notes modal or inputs
+    if (e.key === '/' &&
+        !state.isNotesModalOpen &&
+        document.activeElement !== elements.searchInput) {
+        e.preventDefault();
+        this.showSearch();
+        elements.searchInput.focus();
+    }
+
+    // Close search with Escape (but allow it to work in notes modal)
+    if (e.key === 'Escape' &&
+        elements.searchContainer.classList.contains('active') &&
+        !state.isNotesModalOpen) {
+        e.preventDefault();
+        this.hideSearch();
+    }
+});
+
     // Click outside to close
     document.addEventListener('click', (e) => {
         if (!elements.searchContainer.contains(e.target) && 
@@ -807,6 +826,7 @@ renderTable: (callback) => {
 // Add to ui object in main.js
 // Update the showNotesModal function in main.js
 showNotesModal: (symbol) => {
+    state.isNotesModalOpen = true;
     const highlightData = state.highlightedPairs[symbol] || {};
     const pairData = state.data.find(item => item.symbol === symbol);
 
@@ -914,24 +934,49 @@ function updateCurrentPrice() {
 
     // Prevent spacebar from pausing when typing in notes
     textarea.addEventListener('keydown', (e) => {
+            // Allow these keys to work normally in the textarea
+    if (e.key === '?' || e.key === '/') {
+        e.stopPropagation(); // Prevent them from triggering shortcuts
+        return;
+    }
         if (e.key === ' ') {
             e.stopPropagation();
         }
     });
 
     // Handle text input with asterisk logic
-    textarea.addEventListener('input', (e) => {
-        const lines = textarea.value.split('\n');
-        const newLines = lines.map((line, i) => {
-            if (i > 0 && lines[i-1].trim().endsWith('.') && !line.trim().startsWith('*')) {
-                return '* ' + line;
-            }
-            return line;
-        });
-        if (newLines.some((line, i) => line !== lines[i])) {
-            textarea.value = newLines.join('\n');
-        }
-    });
+textarea.addEventListener('keydown', function(e) {
+    // Only handle Enter key
+    if (e.key !== 'Enter') return;
+
+    const cursorPos = this.selectionStart;
+    const textBeforeCursor = this.value.substring(0, cursorPos);
+    const linesBeforeCursor = textBeforeCursor.split('\n');
+    const currentLine = linesBeforeCursor[linesBeforeCursor.length - 1].trim();
+
+    // Check if we're at the end of a line ending with . or ..
+    if (currentLine.endsWith('..')) {
+        e.preventDefault();
+        const textAfterCursor = this.value.substring(cursorPos);
+        this.value = textBeforeCursor + '\n* ' + textAfterCursor;
+        this.setSelectionRange(cursorPos + 3, cursorPos + 3); // Place cursor after "* "
+    }
+    else if (currentLine.endsWith('.')) {
+        e.preventDefault();
+        const textAfterCursor = this.value.substring(cursorPos);
+        this.value = textBeforeCursor + '\n- ' + textAfterCursor;
+        this.setSelectionRange(cursorPos + 3, cursorPos + 3); // Place cursor after "- "
+    }
+});
+
+// First line asterisk handling (separate from Enter key)
+textarea.addEventListener('input', function(e) {
+    if (this.value.length > 0 && !this.value.startsWith('* ')) {
+        const cursorPos = this.selectionStart;
+        this.value = '* ' + this.value;
+        this.setSelectionRange(cursorPos + 2, cursorPos + 2);
+    }
+});
 
     // Handle checkbox changes
     modal.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
@@ -952,14 +997,16 @@ function updateCurrentPrice() {
     // Close button
     closeBtn.addEventListener('click', () => {
         // Save notes
-        if (!state.highlightedPairs[symbol]) return;
-        state.highlightedPairs[symbol].notes = textarea.value;
-        localStorage.setItem(CONFIG.defaults.highlightStorageKey, JSON.stringify(state.highlightedPairs));
+        if (state.highlightedPairs[symbol]) {
+            state.highlightedPairs[symbol].notes = textarea.value;
+            localStorage.setItem(CONFIG.defaults.highlightStorageKey, JSON.stringify(state.highlightedPairs));
+        }
         modal.remove();
         clearInterval(priceUpdateInterval);
+        state.isNotesModalOpen = false;
     });
 
-    // ESC key to close
+    // ESC key handler
     document.addEventListener('keydown', function escHandler(e) {
         if (e.key === 'Escape') {
             // Save notes
@@ -970,6 +1017,7 @@ function updateCurrentPrice() {
             modal.remove();
             document.removeEventListener('keydown', escHandler);
             clearInterval(priceUpdateInterval);
+            state.isNotesModalOpen = false;
         }
     });
 
@@ -1204,6 +1252,7 @@ updateFavicon: (status) => {
         state.visibleCount = 20;
         // Pair visibility controls
         const showMorePairs = () => {
+                if (state.isNotesModalOpen) return;
             const previousCount = state.visibleCount;
             state.visibleCount = Math.min(state.visibleCount + 5, CONFIG.defaults.totalPairs);
             
@@ -1222,6 +1271,7 @@ updateFavicon: (status) => {
         };
 
         const showLessPairs = () => {
+            if (state.isNotesModalOpen) return;
             const previousCount = state.visibleCount;
             state.visibleCount = Math.max(state.visibleCount - 5, 5);
             
@@ -1286,22 +1336,24 @@ elements.refreshButton.addEventListener('click', () => {
         // Keyboard shortcuts
 // Keyboard shortcuts (keep this as is)
 document.addEventListener('keydown', (e) => {
-    // Ignore spacebar if typing in inputs
-    if (e.target.tagName === 'INPUT' || document.querySelector('.search-container.active')) {
+    // Ignore if notes modal is open or typing in inputs
+    if (state.isNotesModalOpen ||
+        e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA' ||
+        document.querySelector('.search-container.active')) {
         return;
     }
     
-    if (e.code === 'Space') {
+    if (e.key === ' ') {
         e.preventDefault();
-        // Directly toggle pause state instead of simulating click
+        // Toggle pause state
         state.isPaused = !state.isPaused;
-        elements.pauseButton.textContent = state.isPaused ? 'R' : 'P'; // PAUSE, PAUSED, RESUME, RESUME
+        elements.pauseButton.textContent = state.isPaused ? 'R' : 'P';
         
         if (state.isPaused) {
             state.pauseStartTime = Date.now();
             connectionManager.stopHeartbeat();
-            
-            // Start the pause timer
+
             state.pauseTimer = setInterval(() => {
                 ui.updateConnectionStatus();
             }, 1000);
@@ -1312,13 +1364,23 @@ document.addEventListener('keydown', (e) => {
             }
             connectionManager.connect();
         }
-        
         ui.updateConnectionStatus();
-        return;
     }
-    
-    if (e.key === 'm' || e.key === 'M') showMorePairs();
+        // Add checks for ? and / keys
+    else if (e.key === '?') {
+        e.preventDefault();
+        // Your fear/greed info box toggle logic here
+    }
+    else if (e.key === '/') {
+        e.preventDefault();
+        if (!state.isNotesModalOpen) {
+            searchManager.showSearch();
+            elements.searchInput.focus();
+        }
+    }
+    else if (e.key === 'm' || e.key === 'M') showMorePairs();
     else if (e.key === 'l' || e.key === 'L') showLessPairs();
+    else if (e.key === 't' || e.key === 'T') toggleTradingView();
 });
 
 
