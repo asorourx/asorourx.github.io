@@ -1526,7 +1526,7 @@ button.touch-active {
 .mobile-controls-container {
     position: fixed;
     right: 10px;
-    bottom: 80px;
+    bottom: 1px;
     display: none;
     flex-direction: column;
     gap: 15px;
@@ -1555,8 +1555,8 @@ button.touch-active {
 
 /* Control Buttons */
 .mobile-control-btn {
-    width: 30px;
-    height: 30px;
+    width: 25px;
+    height: 25px;
     border-radius: 50%;
     background: transparent;
     border: 1px solid #f0b90b;
@@ -1565,7 +1565,7 @@ button.touch-active {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     transition: all 0.2s;
 }
 
@@ -1582,8 +1582,8 @@ button.touch-active {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
 }
 
 /* Base styles for all views */
@@ -1788,10 +1788,10 @@ button.touch-active {
     color: #f0b90b;
     border: 1px solid #f0b90b;
     border-radius: 4px;
-    font-size: 17px;
-    padding: 4px 12px;
+    font-size: 18px;
+    padding: 2px 6px;
     cursor: pointer;
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 6px rgba(107, 98, 98, 0.4);
     transition: background 0.2s;
 }
 
@@ -1799,7 +1799,7 @@ button.touch-active {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    background: #1a1e27;
+    background: #2d323c;
     padding: 6px;
     border-radius: 8px;
     border: 1px solid #4d3a3f;
