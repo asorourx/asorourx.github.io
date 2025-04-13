@@ -1456,7 +1456,7 @@ body.light-theme .fear-greed-popup-stat-label {
 }
 
 body.light-theme .fear-greed-popup-value {
-    border-bottom-color: #e0e0e0;
+    border-bottom-color: #989797;
 }
 
 body.light-theme .update-info {
@@ -1939,4 +1939,198 @@ button.touch-active {
     border-radius: 8px;
     border: 1px solid #4d3a3f;
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+
+/* Add to styles.css */
+.notes-icon {
+    margin-left: 5px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: all 0.2s;
+}
+
+.notes-icon.has-notes {
+    color: #f0b90b;
+    opacity: 1;
+    font-weight: bold;
+}
+
+.notes-icon:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.notes-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* Keep the transparency but remove blur */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 2000;
+    pointer-events: auto;
+    /* Remove this line: backdrop-filter: blur(2px); */
+}
+
+.notes-modal {
+    background: #2a2f3d;
+    border: 1px solid #f0b90b;
+    border-radius: 8px;
+    width: 380px;
+    max-width: 500px;
+    max-height: 70vh;
+    overflow: auto;
+    position: absolute; /* Changed to absolute for draggable */
+    top: 20px; /* Initial position */
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: grab;
+}
+.notes-modal:active {
+    cursor: grabbing;
+}
+.current-price {
+    font-size: 13px;
+    margin-top: 1px;
+    font-weight: 500;
+}
+body.light-theme .notes-modal-overlay {
+    background: rgba(255, 255, 255, 0.6); /* White with 60% opacity */
+}
+
+body.light-theme .current-price {
+    color: #d0a000;
+}
+.notes-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #3a3f4d;
+}
+/* Light theme adjustments */
+body.light-theme .modal-pair-icon {
+    filter: brightness(0.8);
+}
+/* Adjust header spacing */
+.notes-modal-header h3 {
+    margin: 0;
+    color: #f0b90b;
+    font-size: 16px;
+    white-space: nowrap;
+}
+/* Pair header styles */
+.pair-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.modal-pair-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+.notes-modal-header h3 {
+    margin: 0;
+    color: #f0b90b;
+}
+
+.close-notes-modal {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.close-notes-modal:hover {
+    color: #fff;
+}
+
+.notes-modal-body {
+    padding: 10px 15px;
+}
+
+.pair-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #8a8a8a;
+}
+
+.notes-textarea {
+    width: 90%; /* Reduced from 100% */
+    min-height: 100px; /* About 5 lines tall */
+    max-height: 100px; /* Fixed height */
+    padding: 8px;
+    margin: 10px auto; /* Centered with smaller margin */
+    background: #1a1e27;
+    color: #eaeaea;
+    border: 1px solid #3a3f4d;
+    border-radius: 4px;
+    resize: none; /* Disable resizing */
+    font-family: 'Oxanium', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    overflow-y: auto; /* Scroll if content exceeds 5 lines */
+}
+
+.checkboxes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.checkboxes-container label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.checkboxes-container input[type="checkbox"] {
+    accent-color: #f0b90b;
+}
+
+/* Light theme adjustments */
+body.light-theme .notes-modal {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+}
+
+body.light-theme .notes-modal-header {
+    border-bottom-color: #e0e0e0;
+}
+
+body.light-theme .notes-textarea {
+    background: #ffffff;
+    color: #333;
+    border-color: #d0d0d0;
+}
+
+body.light-theme .pair-info {
+    color: #666;
+}
+/* Light theme adjustments */
+body.light-theme .price-up {
+    color: #0a8f5e !important;
+}
+
+body.light-theme .price-down {
+    color: #d63031 !important;
+}
+.price-up {
+    color: #0ecb81 !important;
+}
+
+.price-down {
+    color: #f6465d !important;
 }
