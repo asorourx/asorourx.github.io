@@ -671,16 +671,16 @@ resultItem.innerHTML = [
     '<span class="price">', formatter.price(item.lastPrice, item.symbol), '</span>',
     '<div class="platform-icons">',
     '<a href="https://www.bybit.com/future/', baseSymbol, '-USDT" target="_blank" class="platform-link">',
-    '<img src="icons/platforms/bybit.png" width="18" height="18" alt="KuCoin">',
+    '<img src="icons/platforms/bybit.png" width="18" height="18" alt="ByBit">',
     '</a>',
     '<a href="https://www.binance.com/en/trade/', baseSymbol, '_USDT" target="_blank" class="platform-link">',
     '<img src="icons/platforms/binance.png" width="18" height="18" alt="Binance">',
     '</a>',
     '<a href="https://www.gateio.com/future/', baseSymbol, '-USDT" target="_blank" class="platform-link">',
-    '<img src="icons/platforms/gateio.png" width="18" height="18" alt="KuCoin">',
+    '<img src="icons/platforms/gateio.png" width="18" height="18" alt="Gateio">',
     '</a>',
     '<a href="https://www.tradingview.com/future/', baseSymbol, '-USDT" target="_blank" class="platform-link">',
-    '<img src="icons/platforms/WTV.png" width="18" height="18" alt="KuCoin">',
+    '<img src="icons/platforms/WTV.png" width="18" height="18" alt="TradingView">',
     '</a>',
     '</div>',
     '</div>'
@@ -852,9 +852,9 @@ const modalHTML = `
                 <textarea class="notes-textarea" placeholder="Type your notes here...">${highlightData.notes || ''}</textarea>
                 <div class="checkboxes-container">
                     ${(highlightData.checkboxes || [
-                        {text: "This is box 1", checked: false},
-                        {text: "This is box 2", checked: false},
-                        {text: "This is box 3", checked: false}
+                        {text: "Entry: ", checked: false},
+                        {text: "Exit : ", checked: false},
+                        {text: "SL/TP: ", checked: false}
                     ]).map((box, i) => `
                         <label>
                             <input type="checkbox" ${box.checked ? 'checked' : ''}
@@ -866,7 +866,6 @@ const modalHTML = `
         </div>
     </div>
     `;
-
     // Add to DOM
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
@@ -984,9 +983,9 @@ textarea.addEventListener('input', function(e) {
             if (!state.highlightedPairs[symbol]) return;
             if (!state.highlightedPairs[symbol].checkboxes) {
                 state.highlightedPairs[symbol].checkboxes = [
-                    {text: "This is box 1", checked: false},
-                    {text: "This is box 2", checked: false},
-                    {text: "This is box 3", checked: false}
+                    {text: "Entry: ", checked: false},
+                    {text: "Exit : ", checked: false},
+                    {text: "SL/TP: ", checked: false}
                 ];
             }
             state.highlightedPairs[symbol].checkboxes[parseInt(checkbox.dataset.index)].checked = checkbox.checked;
