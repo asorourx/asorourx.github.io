@@ -1544,16 +1544,19 @@ body.light-theme .fa-moon {
 
 /* Gauge Styles */
 .gauge-container {
-	width: 50px;
-	height: 28px;
+
 	font-family: 'Oxanium', -apple-system, BlinkMacSystemFont, sans-serif;
 	display: inline-block;
 	vertical-align: middle;
 	margin-left: 0.5px;
 	cursor: pointer;
 	padding: 5 5px;
+            width: 60px !important;
+        height: 40px !important;
+        transform: none !important;
 	/* Adjust left/right inner spacing (5px = example) */
 }
+
 
 /* Needle Style 
 #needle {
@@ -1743,11 +1746,31 @@ button.touch-active {
   .header-buttons {
     gap: 4px;
     margin-left: 0;
+          min-width: auto !important;
+    flex-wrap: nowrap;
   }
   
   #fearGreedGauge {
         margin-left: 4px; /* Slight spacing adjustment */
   }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+    #fearGreedGauge {
+        width: 60px !important;
+        height: 50px !important;
+    }
+
+    .gauge-container {
+        width: 60px !important;
+        height: 50px !important;
+    }
+
+    .gauge-svg {
+        width: 60px !important;
+        height: 50px !important;
+    }
 }
 
 /* iPad/Tablet (1024px and below) */
@@ -1788,6 +1811,12 @@ button.touch-active {
 /* Mobile Phones (768px and below) */
 @media (max-width: 768px) {
   .volume-header-container {
+        width: 60px !important;  /* Increased from 50px */
+        height: 40px !important; /* Increased from 28px */
+        margin: 0 auto;          /* Center align */
+        display: flex;
+        justify-content: center;
+        align-items: center;
     gap: 4px;
     flex-wrap: nowrap;
   }
@@ -2133,4 +2162,22 @@ body.light-theme .price-down {
 
 .price-down {
     color: #f6465d !important;
+}
+
+
+/* Base font size - will be overridden by JS */
+html {
+    font-size: 14px;
+}
+
+/* Elements that should scale with font size */
+body, table, th, td, .pair-name, .price, .change-percent, .volume-value {
+    font-size: 1em;
+}
+
+/* Elements that should remain fixed size */
+.header-button, .tv-screen, .theme-toggle-button,
+.refresh-button, .connection-indicator,
+.mobile-control-btn, .mobile-arrow {
+    font-size: 12px !important;
 }

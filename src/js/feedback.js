@@ -10,7 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
         durationValue: document.getElementById('durationValue'),
         toggleFeedback: document.getElementById('toggleVisualFeedback'),
         upColorPicker: document.getElementById('upColorPicker'),
-        downColorPicker: document.getElementById('downColorPicker')
+        downColorPicker: document.getElementById('downColorPicker'),
+        fontSizeAdjuster: document.getElementById('fontSizeAdjuster'),
+        fontSizeValue: document.getElementById('fontSizeValue'),
     };
     
     // Create overlay if it doesn't exist
@@ -18,14 +20,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(elements.settingsOverlay);
     
     // Visual feedback state with default duration of 1500ms (changed from 3500ms to match your default)
-    const state = {
-        visualFeedback: {
-            enabled: localStorage.getItem('visualFeedbackEnabled') !== 'false',
-            duration: parseInt(localStorage.getItem('animationDuration')) || 1500,
-            upColor: localStorage.getItem('upColor') || '#0ecb81',
-            downColor: localStorage.getItem('downColor') || '#f6465d'
-        }
-    };
+const state = {
+    visualFeedback: {
+        enabled: localStorage.getItem('visualFeedbackEnabled') !== 'false',
+        duration: parseInt(localStorage.getItem('animationDuration')) || 1500,
+        upColor: localStorage.getItem('upColor') || '#0ecb81',
+        downColor: localStorage.getItem('downColor') || '#f6465d',
+        fontSize: parseInt(localStorage.getItem('fontSize')) || 14
+    }
+};
     
     // Helper function to convert hex to rgba
     function hexToRgba(hex, alpha) {
@@ -56,7 +59,10 @@ document.addEventListener('DOMContentLoaded', function() {
             );
         }
     }
-    
+    // Update font size
+function updateFontSize() {
+    document.documentElement.style.fontSize = `${state.visualFeedback.fontSize}px`;
+}
     // ESC key handler
     function handleKeyDown(e) {
         if (e.key === 'Escape' && elements.settingsPanel.style.display === 'block') {
@@ -88,7 +94,9 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.durationValue.textContent = `${state.visualFeedback.duration}ms`;
         elements.upColorPicker.value = state.visualFeedback.upColor;
         elements.downColorPicker.value = state.visualFeedback.downColor;
-        
+        elements.fontSizeAdjuster.value = state.visualFeedback.fontSize;
+        elements.fontSizeValue.textContent = `${state.visualFeedback.fontSize}px`;
+        updateFontSize();
         // Set up event listeners
         elements.settingsButton.addEventListener('click', openSettings);
         elements.closeSettings.addEventListener('click', closeSettings);
@@ -124,7 +132,14 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('downColor', e.target.value);
             updateAnimationColors();
         });
-        
+        // Font size adjustment
+elements.fontSizeAdjuster.addEventListener('input', (e) => {
+    const size = parseInt(e.target.value);
+    state.visualFeedback.fontSize = size;
+    localStorage.setItem('fontSize', size);
+    elements.fontSizeValue.textContent = `${size}px`;
+    updateFontSize();
+});
         // Initialize CSS variables
         updateAnimationDuration();
         updateAnimationColors();
@@ -157,7 +172,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!localStorage.getItem('downColor')) {
             localStorage.setItem('downColor', '#f6465d');
         }
+        if (!localStorage.getItem('fontSize')) {
+        localStorage.setItem('fontSize', '14');
     }
+}
     
     // Initialize the settings
     cleanupOldStorage();

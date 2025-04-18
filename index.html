@@ -140,22 +140,30 @@
                     </label>
                 </div>
                 <div class="setting-item">
-                    <label>Animation Duration:</label>
+                    <label>Flash Duration:</label>
                     <div style="display: flex; align-items: center;">
                         <input type="range" id="animationDuration" min="500" max="3000" value="1500" step="100">
                         <span id="durationValue">1500ms</span>
                     </div>
                 </div>
                 <div class="setting-item">
-                    <label>Up Color:</label>
+                    <label>Up:</label>
                     <input type="color" id="upColorPicker" value="#0ecb81">
                 </div>
                 <div class="setting-item">
-                    <label>Down Color:</label>
+                    <label>Down:</label>
                     <input type="color" id="downColorPicker" value="#f6465d">
                 </div>
             </div>
+            <div class="setting-item">
+        <label>Font Size:</label>
+        <div style="display: flex; align-items: center;">
+        <input type="range" id="fontSizeAdjuster" min="10" max="30" value="14" step="1">
+        <span id="fontSizeValue">14px</span>
+    </div>
+</div>
         </div>
+
         <script>
 document.getElementById('add-feedback-setting').addEventListener('click', function () {
   const settingGroup = this.closest('.settings-group');

@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Toggle visibility
     function toggleTradingView() {
-        if (state.isNotesModalOpen) return;
         const isVisible = tvContainer.style.display === 'none';
         tvContainer.style.display = isVisible ? 'block' : 'none';
         localStorage.setItem('tvWidgetVisible', isVisible);
@@ -25,6 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load TradingView widget
     function loadTradingViewWidget() {
         if (!window.tvScriptLoaded && tvWidget) {
+            // Clear any existing widget first
+            tvWidget.innerHTML = '';
+
             const script = document.createElement('script');
             script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
             script.async = true;
@@ -53,9 +55,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Button click handler
-    tvButton.addEventListener('click', toggleTradingView);
+    tvButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        toggleTradingView();
+    });
 
-    // Single keyboard shortcut handler
+    // Keyboard shortcut handler
     document.addEventListener('keydown', function(e) {
         if (e.key.toLowerCase() === 't' && !e.target.matches('input, textarea, [contenteditable]')) {
             e.preventDefault();
