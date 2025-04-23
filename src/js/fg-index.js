@@ -323,21 +323,14 @@ class FearGreedIndex {
 updateGauge(value) {
     // First try to get the gauge element if we don't have it
     if (!this.gaugeElement) {
-        this.gaugeElement = document.getElementById('fearGreedGauge');
+        this.gaugeElement = document.querySelector('.gauge-container');
         if (!this.gaugeElement) return;
     }
 
     // Get or create the value text element
     let valueText = this.gaugeElement.querySelector('#valueText');
     if (!valueText) {
-        // Create the text element if it doesn't exist
-        valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        valueText.setAttribute('id', 'valueText');
-        valueText.setAttribute('x', '50');
-        valueText.setAttribute('y', '40');
-        valueText.setAttribute('class', 'value-text');
-        valueText.setAttribute('text-anchor', 'middle');
-        this.gaugeElement.querySelector('svg').appendChild(valueText);
+        valueText = this.gaugeElement.querySelector('text');
     }
 
     const clamped = Math.max(0, Math.min(100, value));
@@ -355,18 +348,24 @@ updateGauge(value) {
     }
     
     // Update value display
-    valueText.textContent = clamped;
-    
-    // Update color - first remove all color classes
-    valueText.classList.remove('glow-low', 'glow-medium', 'glow-high');
-    
-    // Then add the appropriate one
-    if (clamped < 25) {
-        valueText.classList.add('glow-low');
-    } else if (clamped <= 75) {
-        valueText.classList.add('glow-medium');
-    } else {
-        valueText.classList.add('glow-high');
+    if (valueText) {
+        valueText.textContent = clamped;
+
+        // Remove all color classes first
+        valueText.classList.remove('glow-low', 'glow-medium', 'glow-high', 'extreme-fear', 'fear', 'neutral', 'greed', 'extreme-greed');
+
+        // Add appropriate color class based on value
+        if (clamped <= 25) {
+            valueText.classList.add('glow-low', 'extreme-fear');
+        } else if (clamped <= 45) {
+            valueText.classList.add('glow-low', 'fear');
+        } else if (clamped <= 55) {
+            valueText.classList.add('glow-medium', 'neutral');
+        } else if (clamped <= 75) {
+            valueText.classList.add('glow-medium', 'greed');
+        } else {
+            valueText.classList.add('glow-high', 'extreme-greed');
+        }
     }
 }
     
