@@ -2215,3 +2215,21 @@ body, table, th, td, .pair-name, .price, .change-percent, .volume-value {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+
+/* Gauge Text Colors */
+#valueText.extreme-fear {
+    fill: #FF3131 !important;
+}
+#valueText.fear {
+    fill: #f8d347 !important;
+}
+#valueText.neutral {
+    fill: #eaeaea !important;
+}
+#valueText.greed {
+    fill: rgba(57, 255, 20, 0.76) !important;
+}
+#valueText.extreme-greed {
+    fill: #39FF14 !important;
+}
