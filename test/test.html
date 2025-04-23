@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bullish/Bearish Calculator</title>
+    <style>
+        :root {
+            --primary: #4a6bff;
+            --primary-hover: #3a5bef;
+            --secondary: #f8f9fa;
+            --border: #e0e3e8;
+            --text: #2d3748;
+            --text-light: #718096;
+            --danger: #f56565;
+            --success: #48bb78;
+            --bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--text);
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .calculator {
+            max-width: 420px;
+            margin: 0 auto;
+            background: var(--bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 16px 20px;
+            background-color: var(--success);
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .data-table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+
+        .data-table td {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table td:last-child {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .divider {
+            border-top: 1px solid var(--border);
+            margin: 20px 0;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 8px;
+            text-align: left;
+            border-radius: 4px;
+        }
+
+        .action-btn:hover {
+            background-color: rgba(74, 107, 255, 0.1);
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        .calculate-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .checkbox-group input {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="header" id="directionHeader">
+            You are Bullish!
+        </div>
+
+        <div class="content">
+            <table class="data-table">
+                <tr>
+                    <td>Account Balance USD</td>
+                    <td id="accountBalance">1000.00</td>
+                </tr>
+                <tr>
+                    <td>Risk %</td>
+                    <td id="riskPercent">15.00</td>
+                </tr>
+                <tr>
+                    <td>Entry Price</td>
+                    <td id="entryPrice">0.75</td>
+                </tr>
+                <tr>
+                    <td>Stop Loss</td>
+                    <td id="stopLoss">0.74</td>
+                </tr>
+                <tr>
+                    <td>Position Size Crypto</td>
+                    <td id="positionSizeCrypto">12967.79808529</td>
+                </tr>
+            </table>
+
+            <table class="data-table">
+                <tr>
+                    <td>Risk USD</td>
+                    <td id="riskUSD">150.00</td>
+                </tr>
+                <tr>
+                    <td>Entry Fee %</td>
+                    <td id="entryFee">0.10</td>
+                </tr>
+                <tr>
+                    <td>Stop Fee %</td>
+                    <td id="stopFee">0.10</td>
+                </tr>
+                <tr>
+                    <td>Position Size USD</td>
+                    <td id="positionSizeUSD">9725.85</td>
+                </tr>
+            </table>
+
+            <div class="divider"></div>
+
+            <div class="actions">
+                <button class="action-btn" id="resetBtn">Reset All</button>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="keepBalance">
+                    <label for="keepBalance">Keep Balance</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="keepRisk">
+                    <label for="keepRisk">Keep Balance/Risk</label>
+                </div>
+                <button class="action-btn" id="unlockFees">Unlock Fees</button>
+            </div>
+
+            <button class="calculate-btn" id="calculateBtn">Calculate</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize with default values from screenshot
+        document.getElementById('accountBalance').textContent = '1000.00';
+        document.getElementById('riskPercent').textContent = '15.00';
+        document.getElementById('entryPrice').textContent = '0.75';
+        document.getElementById('stopLoss').textContent = '0.74';
+        document.getElementById('positionSizeCrypto').textContent = '12967.79808529';
+        document.getElementById('riskUSD').textContent = '150.00';
+        document.getElementById('entryFee').textContent = '0.10';
+        document.getElementById('stopFee').textContent = '0.10';
+        document.getElementById('positionSizeUSD').textContent = '9725.85';
+
+        // Set up event listeners
+        document.getElementById('resetBtn').addEventListener('click', resetAll);
+        document.getElementById('calculateBtn').addEventListener('click', calculate);
+        document.getElementById('unlockFees').addEventListener('click', unlockFees);
+
+        function calculate() {
+            // Calculation logic would go here
+            alert('Calculate button clicked!');
+        }
+
+        function resetAll() {
+            if (!document.getElementById('keepBalance').checked &&
+                !document.getElementById('keepRisk').checked) {
+                document.getElementById('accountBalance').textContent = '0.00';
+            }
+            document.getElementById('riskPercent').textContent = '0.00';
+            document.getElementById('entryPrice').textContent = '0.00';
+            document.getElementById('stopLoss').textContent = '0.00';
+            document.getElementById('positionSizeCrypto').textContent = '0.00';
+            document.getElementById('riskUSD').textContent = '0.00';
+            document.getElementById('entryFee').textContent = '0.00';
+            document.getElementById('stopFee').textContent = '0.00';
+            document.getElementById('positionSizeUSD').textContent = '0.00';
+        }
+
+        function unlockFees() {
+            // Fee unlocking logic would go here
+            alert('Fees unlocked!');
+        }
+    </script>
+</body>
+</html>

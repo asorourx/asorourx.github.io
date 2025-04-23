@@ -4,11 +4,11 @@ body {
 	font-family: 'Oxanium', -apple-system, BlinkMacSystemFont, sans-serif;
 	background: #0f1923;
 	color: #eaeaea;
-	margin: 0;
-	padding: 8px;
 	font-size: 14px;
-	min-width: 600px;
-    overflow-x: auto;
+    padding: 15px;
+    margin: 0;
+    min-width: auto; /* Remove fixed min-width */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 /*Hiding "Show more" button */
@@ -17,11 +17,15 @@ body {
 }
 
 #app {
-    max-width: 1000px;
-    margin: 0 auto;
     min-height: calc(100vh - 20px); /* Fill viewport minus small gap */
     display: flex;
     flex-direction: column;
+
+        max-width: none; /* Remove max-width constraint */
+    width: calc(100vw - 30px); /* Account for padding */
+    height: calc(100vh - 30px); /* Account for padding */
+    margin: 0;
+    padding: 0;
 }
 
 /* Table Styles */
@@ -30,13 +34,14 @@ table {
     overflow-x: auto;
     overflow-y: auto;
     display: block;
-    width: 100%;
     max-width: 1000px;
-    margin: 0 auto;
     white-space: nowrap;
     min-width: 100%;
-    max-height: calc(100vh - 100px); /* Adjust based on your header height */
     flex-grow: 1; /* Makes table expand to fill available space */
+        width: 100%;
+    height: calc(100% - 40px); /* Adjust based on your header height */
+    max-height: none; /* Remove max-height constraint */
+    margin: 0;
 
 }
 thead {
@@ -204,9 +209,9 @@ tr:hover {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 0;
 	position: relative;
-	min-height: 50px;
+        margin-bottom: 8px;
+    min-height: auto;
 }
 /* Volume Header Container */
 .volume-header-container {
@@ -1204,15 +1209,14 @@ tr:hover {
 .tradingview-widget-container {
     position: relative;
 	left: 0;
-	right: 250px;
 	/* Adjust this value based on your header buttons width */
 	z-index: 1;
 	/* Start hidden by default */
 	margin-top: 8px;
-	width: 100%;
+    width: calc(100% - 30px) !important;
     max-width: 1000px; /* Match your table's max-width */
     margin: 0 auto;
-    height: 65;
+    height: 60;
     overflow: hidden;
     transition: opacity 0.3s ease;
     display: block;
@@ -1230,8 +1234,11 @@ tr:hover {
 }
 
 .tradingview-widget-container__widget {
-	height: 100%;
-	width: 100%;
+    width: 100% !important;
+    height: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
 }
 
 /* Tooltip for TV button */
@@ -1756,20 +1763,31 @@ button.touch-active {
 }
 
 /* For very small screens */
+/* For very small screens */
 @media (max-width: 480px) {
+    .header-buttons {
+        gap: 1px;
+    }
+
+    /* Make buttons smaller if needed */
+    .header-button,
+    .refresh-button,
+    .tv-screen,
+    .connection-indicator {
+        width: 22px;
+        height: 22px;
+        font-size: 10px;
+    }
+
+    /* Adjust gauge size */
     #fearGreedGauge {
-        width: 60px !important;
-        height: 50px !important;
+        width: 45px !important;
+        height: 25px !important;
     }
 
     .gauge-container {
-        width: 60px !important;
-        height: 50px !important;
-    }
-
-    .gauge-svg {
-        width: 60px !important;
-        height: 50px !important;
+        width: 45px !important;
+        height: 25px !important;
     }
 }
 
@@ -1809,37 +1827,41 @@ button.touch-active {
 }
 
 /* Mobile Phones (768px and below) */
+/* Mobile adjustments for header buttons */
 @media (max-width: 768px) {
-  .volume-header-container {
-        width: 60px !important;  /* Increased from 50px */
-        height: 40px !important; /* Increased from 28px */
-        margin: 0 auto;          /* Center align */
+    .volume-header-container {
         display: flex;
-        justify-content: center;
         align-items: center;
-    gap: 4px;
-    flex-wrap: nowrap;
-  }
-  
-  .volume-text {
-    white-space: nowrap;
-    margin-right: 2px;
-    font-size: 0.9em; /* Slightly smaller text */
-  }
-  
-  /* Tighten button spacing */
-  .header-buttons {
-    gap: 2px;
-    margin-left: -1px; /* Negative margin for tight fit */
-  }
-  
+        gap: 4px;
+        flex-wrap: nowrap;
+    }
     
-  /* Column width adjustments */
-  th:nth-child(5),
-  td:nth-child(5) {
-    min-width: 150px;
-  }
-  
+    .volume-text {
+        display: none; /* Hide text on small screens */
+    }
+
+    .header-buttons {
+        margin-left: 0;
+        gap: 2px;
+    }
+
+    /* Bring gauge and status closer */
+    #connectionIndicator,
+    #fearGreedGauge {
+        margin-left: 0;
+    }
+
+    /* Adjust gauge size if needed */
+    #fearGreedGauge {
+        width: 50px !important;
+        height: 28px !important;
+    }
+
+    .gauge-container {
+        width: 50px !important;
+        height: 28px !important;
+    }
+
   /* TradingView widget adjustment */
   .tradingview-widget-container {
     right: 250px;
@@ -2180,4 +2202,16 @@ body, table, th, td, .pair-name, .price, .change-percent, .volume-value {
 .refresh-button, .connection-indicator,
 .mobile-control-btn, .mobile-arrow {
     font-size: 12px !important;
+}
+
+/* Add this if you want the spinning effect in the page too */
+.connection-status.connecting::after,
+.connection-status.reconnecting::after {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }

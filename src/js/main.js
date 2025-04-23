@@ -89,15 +89,6 @@ const state = {
         searchContainer: document.querySelector('.search-container'),
         searchResults: document.getElementById('searchResults'),
     };
-
-// ===== NOTIFICATION SYSTEM =====
-function showRemovalNotification(symbol) {
-    const alert = document.createElement('div');
-    alert.className = 'pair-removed-alert';
-    alert.textContent = `✕ Removed ${symbol} (inactive)`;
-    document.body.appendChild(alert);
-    setTimeout(() => alert.remove(), 5000);
-}
     
 // ===== FORMATTER =====
 const formatter = {
@@ -190,223 +181,114 @@ dollarChange: (currentPrice, highlightPrice, symbol) => {
 
 // ===== CONNECTION MANAGER =====
     // ===== CONNECTION MANAGER =====
-    const connectionManager = {
-        connect: function() {
-            // Clear any existing connection
-            if (state.socket) {
-                state.socket.onopen = null;
-                state.socket.onclose = null;
-                state.socket.onerror = null;
-                state.socket.close();
-            }
+const connectionManager = {
+    connect: function() {
+        // Clear any existing connection
+        if (state.socket) {
+            state.socket.onopen = null;
+            state.socket.onclose = null;
+            state.socket.onerror = null;
+            state.socket.close();
+        }
 
-            // Use AbortController for better cleanup
-            const abortController = new AbortController();
-            state.abortController = abortController;
+        // Use AbortController for better cleanup
+        const abortController = new AbortController();
+        state.abortController = abortController;
 
-            state.connection.status = 'connecting';
+        state.connection.status = 'connecting';
+        ui.updateConnectionStatus();
+        ui.updateFavicon('connecting');
+
+        state.socket = new WebSocket(state.currentWsUrl);
+        state.socket.binaryType = 'arraybuffer';
+
+        state.socket.onopen = () => {
+            if (abortController.signal.aborted) return;
+            state.connection.status = 'connected';
+            state.connection.retryCount = 0;
+            state.connection.lastUpdate = Date.now();
             ui.updateConnectionStatus();
+            ui.updateFavicon('connected');
+            dataManager.loadInitialData();
+        };
 
-            state.socket = new WebSocket(state.currentWsUrl);
-            state.socket.binaryType = 'arraybuffer';
-
-            state.socket.onopen = () => {
-                if (abortController.signal.aborted) return;
-                state.connection.status = 'connected';
-                state.connection.retryCount = 0;
+        state.socket.onmessage = (e) => {
+            if (abortController.signal.aborted) return;
+            try {
+                const data = JSON.parse(e.data);
                 state.connection.lastUpdate = Date.now();
-                ui.updateConnectionStatus();
-                dataManager.loadInitialData();
-            };
-
-            state.socket.onmessage = (e) => {
-                if (abortController.signal.aborted) return;
-                try {
-                    const data = JSON.parse(e.data);
-                    state.connection.lastUpdate = Date.now();
-                    if (!state.isPaused) {
-                        dataManager.processMarketData(data);
-                    }
-                } catch (err) {
-                    console.error('Error parsing WebSocket message:', err);
+                if (!state.isPaused) {
+                    dataManager.processMarketData(data);
                 }
-            };
-
-            state.socket.onclose = (e) => {
-                if (abortController.signal.aborted) return;
-                this.handleDisconnection();
-            };
-
-            state.socket.onerror = (e) => {
-                if (abortController.signal.aborted) return;
-                this.handleDisconnection();
-            };
-        },
-
-        handleDisconnection: function() {
-            if (state.isPaused) return;
-            state.connection.status = 'disconnected';
-            ui.updateConnectionStatus();
-            this.stopHeartbeat();
-            this.scheduleReconnection();
-        },
-
-        scheduleReconnection: function() {
-            state.connection.retryCount++;
-            const delay = Math.min(
-                CONFIG.connection.baseDelay * Math.pow(2, state.connection.retryCount),
-                CONFIG.connection.maxDelay
-            );
-
-            state.connection.status = 'reconnecting';
-            ui.updateConnectionStatus();
-
-            setTimeout(() => {
-                if (!state.isPaused) this.connect();
-            }, delay);
-        },
-
-        startHeartbeat: function() {
-            this.stopHeartbeat();
-        },
-
-        stopHeartbeat: function() {
-            if (state.connection.pingInterval) {
-                clearInterval(state.connection.pingInterval);
-                state.connection.pingInterval = null;
+            } catch (err) {
+                console.error('Error parsing WebSocket message:', err);
             }
-            if (state.pauseTimer) {
-                clearInterval(state.pauseTimer);
-                state.pauseTimer = null;
-            }
-        },
+        };
 
+        state.socket.onclose = (e) => {
+            if (abortController.signal.aborted) return;
+            this.handleDisconnection();
+        };
 
-checkStalePairs: function() {
-    const STALE_THRESHOLD = 3600000; // 1 hour
-    const REMOVAL_THRESHOLD = 86400000; // 24 hours
-    const now = Date.now();
-    const initialCount = state.data.length;
-    
-    // 1. Remove stale pairs (with visual feedback)
-    const removedPairs = [];
-    state.data = state.data.filter(pair => {
-        if (!pair.lastUpdated || (now - pair.lastUpdated > REMOVAL_THRESHOLD)) {
-            console.log(`Removing stale pair: ${pair.symbol}`);
-            removedPairs.push(pair.symbol);
-            return false;
+        state.socket.onerror = (e) => {
+            if (abortController.signal.aborted) return;
+            this.handleDisconnection();
+        };
+    },
+
+    handleDisconnection: function() {
+        if (state.isPaused) return;
+
+        state.connection.status = 'disconnected';
+        ui.updateConnectionStatus();
+        ui.updateFavicon('disconnected');
+        this.stopHeartbeat();
+        this.scheduleReconnection();
+    },
+
+    scheduleReconnection: function() {
+        state.connection.retryCount++;
+        const delay = Math.min(
+            CONFIG.connection.baseDelay * Math.pow(2, state.connection.retryCount),
+            CONFIG.connection.maxDelay
+        );
+
+        state.connection.status = 'reconnecting';
+        ui.updateConnectionStatus();
+        ui.updateFavicon('reconnecting');
+
+        setTimeout(() => {
+            if (!state.isPaused) this.connect();
+        }, delay);
+    },
+
+    startHeartbeat: function() {
+        this.stopHeartbeat();
+    },
+
+    stopHeartbeat: function() {
+        if (state.connection.pingInterval) {
+            clearInterval(state.connection.pingInterval);
+            state.connection.pingInterval = null;
         }
-        return true;
-    });
-
-    // Show removal notifications (batched)
-    if (removedPairs.length > 0) {
-        showRemovalNotification(removedPairs.join(', '));
-    }
-
-    // 2. Smart Replenishment System (NEW IMPROVED VERSION)
-    state.lastReplenish = state.lastReplenish || 0;
-    const needsReplenish = (
-        state.data.length < CONFIG.defaults.totalPairs && 
-        Date.now() - state.lastReplenish > 60000 &&
-        !state.isPaused
-    );
-
-    if (needsReplenish) {
-        const needed = CONFIG.defaults.totalPairs - state.data.length;
-        console.log(`Replenishing ${needed} pairs...`);
-
-        fetch(`${CONFIG.api.futures}/ticker/24hr`)
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return res.json();
-            })
-            .then(allPairs => {
-                // Enhanced filtering with volume threshold
-                const newPairs = allPairs
-                    .filter(p => (
-                        p.symbol.endsWith('USDT') &&
-                        !state.data.some(existing => existing.symbol === p.symbol) &&
-                        parseFloat(p.quoteVolume) > 1000000 // Minimum $1M volume
-                    ))
-                    .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
-                    .slice(0, needed)
-                    .map(p => ({
-                        ...p,
-                        hadUpdate: false,
-                        updateDirection: null,
-                        lastUpdated: Date.now(), // Mark as fresh
-                        isNew: true // Flag for animation
-                    }));
-
-                if (newPairs.length > 0) {
-                    state.data.push(...newPairs);
-                    state.data.sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
-                    
-                    // Visual feedback
-                    ui.renderTable(() => {
-                        ui.showTempMessage(`↻ Replenished ${newPairs.length} pairs`);
-                        animateNewPairs(newPairs);
-                    });
-                }
-                state.lastReplenish = Date.now();
-            })
-            .catch(err => {
-                console.error('Replenishment failed:', err);
-                ui.showTempMessage('⚠️ Replenishment failed (retrying...)');
-            });
-    }
-
-    // 3. Existing individual pair refresh logic
-    state.data.forEach(pair => {
-        if (!pair.lastUpdated || (now - pair.lastUpdated > STALE_THRESHOLD)) {
-            fetch(`${CONFIG.api.futures}/ticker/24hr?symbol=${pair.symbol}`)
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return res.json();
-                })
-                .then(freshData => {
-                    if (freshData?.E && (!pair.lastUpdated || freshData.E > pair.lastUpdated)) {
-                        Object.assign(pair, {
-                            lastPrice: freshData.lastPrice,
-                            priceChangePercent: freshData.priceChangePercent,
-                            quoteVolume: freshData.quoteVolume,
-                            lastUpdated: freshData.E,
-                            hadUpdate: true
-                        });
-                        ui.renderTable();
-                    }
-                })
-                .catch(err => {
-                    console.warn(`Refresh failed for ${pair.symbol}:`, err);
-                    if (err.message.includes('404')) {
-                        state.data = state.data.filter(p => p.symbol !== pair.symbol);
-                        ui.renderTable();
-                    }
-                });
+        if (state.pauseTimer) {
+            clearInterval(state.pauseTimer);
+            state.pauseTimer = null;
         }
-    });
-
-    // New pair animation helper
-    function animateNewPairs(pairs) {
-        pairs.forEach(p => {
-            const row = document.querySelector(`tr[data-symbol="${p.symbol}"]`);
-            if (row) {
-                row.classList.add('new-pair');
-                setTimeout(() => row.classList.remove('new-pair'), 3000);
-            }
-        });
-    }
-},
-
-        
-        cleanup: function() {
-            if (state.stalePairInterval) {
-                clearInterval(state.stalePairInterval);
-                state.stalePairInterval = null;
-            }
+        if (state.faviconAnimation) {
+            clearInterval(state.faviconAnimation);
+            state.faviconAnimation = null;
         }
-    };
+    },
+
+    cleanup: function() {
+        if (state.stalePairInterval) {
+            clearInterval(state.stalePairInterval);
+            state.stalePairInterval = null;
+        }
+        this.stopHeartbeat();
+    }
+};
     // ===== DATA MANAGER =====
     const dataManager = {
 loadInitialData: async () => {
@@ -1218,24 +1100,46 @@ updateConnectionStatus: () => {
 },
 
 updateFavicon: (status) => {
-    const iconMap = {
-        'connected': '🟢',
-        'disconnected': '🔴',
-        'connecting': '🟡',
-        'reconnecting': '🟠',
-        'error': '⚠️',
-        'paused': '⏸️'
+    const statusColors = {
+        'connected': '#0ecb81',    // Green
+        'disconnected': '#f6465d', // Red
+        'connecting': '#f8d347',   // Yellow
+        'reconnecting': '#f8d347', // Yellow
+        'error': '#ff9900',        // Orange
+        'paused': '#aaaaaa'        // Gray
     };
-    
-    const emoji = iconMap[status] || '❓';
-    
+
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d');
-    ctx.font = '48px emoji, serif';
-    ctx.fillText(emoji, 8, 52);
     
+    // Set font and text alignment
+    ctx.font = '48px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Speed control: Adjust the divisor (200) for faster/slower spin
+
+
+    // Always spin (Spinning Speed) the Bitcoin symbol
+    const spinSpeed = 18; // <<< CHANGE THIS VALUE TO CONTROL SPEED
+    const angle = (Date.now() / spinSpeed) % 360;
+    ctx.save();
+    ctx.translate(32, 32);
+    ctx.rotate(angle * Math.PI / 180);
+    ctx.fillStyle = statusColors[status] || '#ffffff'; // Default to white if status unknown
+    ctx.fillText('₿', 0, 0);
+    ctx.restore();
+
+    // Continue animation
+    if (!state.faviconAnimation) {
+        state.faviconAnimation = setInterval(() => {
+            ui.updateFavicon(status);
+        }, 50);
+    }
+
+    // Update favicon
     let favicon = document.querySelector('link[rel="icon"]');
     if (!favicon) {
         favicon = document.createElement('link');
@@ -1244,7 +1148,6 @@ updateFavicon: (status) => {
     }
     favicon.href = canvas.toDataURL('image/png');
 },
-
     // ===== CONTROLS SETUP =====
     setupControls: () => {
         // Set default visible pairs
@@ -1423,17 +1326,44 @@ elements.sortHeader.addEventListener('click', function(e) {
 
 //Make sure to clear the timer when the page is unloading.
 window.addEventListener('beforeunload', () => {
+    // Clear highlight timers
+    Object.keys(state.highlightTimers).forEach(symbol => {
+        clearInterval(state.highlightTimers[symbol]);
+    });
+    state.highlightTimers = {};
+
+    // Cleanup connection
     connectionManager.cleanup();
+    if (state.abortController) {
+        state.abortController.abort();
+    }
     if (state.pauseTimer) {
         clearInterval(state.pauseTimer);
     }
-    if (state.connection.pingInterval) {
-        clearInterval(state.connection.pingInterval);
+
+    // Clear favicon animation
+    if (state.faviconAnimation) {
+        clearInterval(state.faviconAnimation);
+        state.faviconAnimation = null;
+    }
+
+        // Set final static ₿ icon
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.font = '48px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f0b90b'; // Gold color for Bitcoin symbol
+    ctx.fillText('₿', 32, 32);
+
+
+    const favicon = document.querySelector('link[rel="icon"]');
+    if (favicon) {
+        favicon.href = canvas.toDataURL('image/png');
     }
 });
-
-
-
 
 
 // ===== INITIALIZATION =====
@@ -1485,11 +1415,7 @@ const init = () => {
 
     // Connection and stale pair checking setup
     connectionManager.connect();
-    
-    // Set up stale pair checking interval (for both mobile and desktop)
-    state.stalePairInterval = setInterval(() => {
-        connectionManager.checkStalePairs();
-    }, 300000); // 5 minutes
+
 
     // Debug tools
     window.debugTools = {
@@ -1614,6 +1540,7 @@ if (mobileMenuToggle && mobileControlsBox) {
 
     // Cleanup
     window.addEventListener('beforeunload', () => {
+
         // Clear highlight timers
         Object.keys(state.highlightTimers).forEach(symbol => {
             clearInterval(state.highlightTimers[symbol]);
