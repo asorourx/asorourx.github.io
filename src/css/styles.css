@@ -20,7 +20,6 @@ body {
     min-height: calc(100vh - 20px); /* Fill viewport minus small gap */
     display: flex;
     flex-direction: column;
-
     max-width: none; /* Remove max-width constraint */
     width: calc(100vw - 30px); /* Account for padding */
     height: calc(100vh - 30px); /* Account for padding */
@@ -190,7 +189,7 @@ tr:hover {
 	justify-content: space-between;
 	align-items: center;
 	position: relative;
-        margin-bottom: 8px;
+        margin-bottom: 0.1px;
     min-height: auto;
 }
 /* Volume Header Container */
@@ -410,17 +409,6 @@ body.light-theme .tv-screen::after {
 	transition: all 0.2s;
 	position: relative;
 	line-height: 1;
-}
-
-/* If you're using emoji or special characters, add this */
-.connection-indicator span {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	height: 100%;
-	transform: translateY(1px);
-	/* Fine-tune vertical alignment */
 }
 
 /* Status colors */
@@ -667,6 +655,7 @@ body.light-theme .tv-screen::after {
     .header-button,
     .connection-indicator,
     #fearGreedGauge {
+        gap: 4px;
         width: 30px;
         height: 30px;
         font-size: 14px;
@@ -1495,7 +1484,7 @@ body.light-theme .mobile-control-btn {
 
 body.light-theme .mobile-arrow {
     background: #e0e0e0;
-    color: #333;
+    color: #3a3f4d;
     border-color: #333;
 }
 
@@ -1634,6 +1623,14 @@ button.touch-active {
     -webkit-tap-highlight-color: transparent;
 }
 
+.mobile-controls-box {
+    display: flex;
+    flex-direction: column;
+    background: #2d323c;
+    border-radius: 8px;
+    border: 1px solid #4d3a3f;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
 
 
 /* Mobile Controls Container */
@@ -1647,16 +1644,7 @@ button.touch-active {
     z-index: 1000;
 }
 /* Controls Box */
-.mobile-controls-box {
-    background: none;
-    border: none;
-    border-radius: 0;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 60px;
-    box-shadow: none;
-}
+
 
 /* Arrows Box */
 .mobile-arrows-box {
@@ -1685,7 +1673,7 @@ button.touch-active {
 
 /* Arrow Buttons */
 .mobile-arrow {
-    background: #2a2f3d;
+    background: transparent;
     color: #f0b90b;
     border: 1px solid #f0b90b;
     border-radius: 6px;
@@ -1735,7 +1723,7 @@ button.touch-active {
 /* For very small screens */
 @media (max-width: 480px) {
     .header-buttons {
-        gap: 1px;
+        gap: 2px;
     }
 
     /* Make buttons smaller if needed */
@@ -1743,8 +1731,8 @@ button.touch-active {
     .refresh-button,
     .tv-screen,
     .connection-indicator {
-        width: 22px;
-        height: 22px;
+        width: 24px;
+        height: 24px;
         font-size: 10px;
     }
 
@@ -1812,6 +1800,10 @@ button.touch-active {
     .header-buttons {
         margin-left: 0;
         gap: 2px;
+    }
+        .current-price {
+        min-width: 60px;
+        font-size: 0.8em;
     }
 
     /* Bring gauge and status closer */
@@ -1929,13 +1921,12 @@ button.touch-active {
     opacity: 1;
 }
 
-
-
 /*Mobile Menu*/
 .mobile-menu {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
+    padding-bottom: 30px
 }
 
 .mobile-menu-toggle {
@@ -1944,24 +1935,11 @@ button.touch-active {
     border: 1px solid #f0b90b;
     border-radius: 4px;
     font-size: 26px;
-    padding: 2px 6px;
+    padding: 2px 7px;
     cursor: pointer;
     box-shadow: 0 0 6px rgba(107, 98, 98, 0.4);
     transition: background 0.2s;
 }
-
-.mobile-controls-box {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: #2d323c;
-    padding: 6px;
-    border-radius: 8px;
-    border: 1px solid #4d3a3f;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-}
-
-
 /* Add to styles.css */
 .notes-icon {
     margin-left: 5px;
@@ -2014,9 +1992,14 @@ button.touch-active {
     cursor: grabbing;
 }
 .current-price {
-    font-size: 12px;
     margin-top: 1px;
     font-weight: 500;
+    font-family: 'Oxanium', monospace;
+    font-size: 0.9em;
+    color: #f0b90b;
+    min-width: 80px;
+    text-align: right;
+    margin-left: auto;
 }
 body.light-theme .notes-modal-overlay {
     background: rgba(255, 255, 255, 0.6); /* White with 60% opacity */
@@ -2201,4 +2184,14 @@ body, table, th, td, .pair-name, .price, .change-percent, .volume-value {
 }
 #valueText.extreme-greed {
     fill: #39FF14 !important;
+}
+@keyframes pricePulse {
+    0% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 0.6; transform: scale(1); }
+}
+
+.price-update {
+    animation: pricePulse 0.5s ease;
+    color: #0ecb81 !important;
 }

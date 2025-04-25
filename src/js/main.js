@@ -371,9 +371,11 @@ processMarketData: (marketData) => {
             updateDirection: parseFloat(update.price) > parseFloat(item.lastPrice || 0) ? 'up' : 'down'
         };
     });
-
+            if (searchManager.searchActive) {
+            searchManager.updateSearchPrices();
+        }
     ui.renderTable();
-}
+    }
 };
     
     
@@ -388,7 +390,9 @@ function debounce(fn, delay) {
 
 // ===== SEARCH MANAGER =====
 const searchManager = {
+    searchActive: false,
 init: function () {
+
     // Keyboard shortcut to open search
     document.addEventListener('keydown', (e) => {
         // Only trigger search shortcut if not already in search input
@@ -433,10 +437,7 @@ init: function () {
         }
     });
 
-    // Handle keyboard navigation in search results
-// In searchManager.init()
-// In searchManager.init() - update the keydown handler
-// Replace the current keydown handler with this:
+// Handle keyboard navigation in search results
 elements.searchInput.addEventListener('keydown', (e) => {
     const items = Array.from(elements.searchResults.querySelectorAll('.coin-item'));
     
@@ -503,26 +504,28 @@ elements.searchInput.addEventListener('input', debounce((e) => {
 }, 300));
 },
 
-showSearch: function () {
+
+
+
+showSearch: function() {
+    this.searchActive = true;
     elements.searchContainer.style.display = 'block';
     elements.searchInput.focus();
     elements.searchInput.value = '';
     elements.searchResults.innerHTML = '';
-    elements.searchContainer.classList.add('active'); // Add active class
+    elements.searchContainer.classList.add('active');
+    this.updateSearchPrices(); // Add this line
 },
 
-
-hideSearch: function () {
+hideSearch: function() {
+    this.searchActive = false;
     elements.searchContainer.style.display = 'none';
     elements.searchInput.value = '';
     elements.searchResults.innerHTML = '';
     elements.searchContainer.classList.remove('active');
     document.getElementById('searchButton').classList.remove('active');
-    
-    // Return focus to a sensible element
     document.getElementById('searchButton').focus();
 },
-
 renderResults: function(results) {
     elements.searchResults.innerHTML = '';
     
@@ -601,6 +604,31 @@ resultItem.innerHTML = [
                 }
             });
         }
+    },
+    updateSearchPrices() {
+    if (!this.searchActive) return;
+
+    const results = this.config.searchResults.querySelectorAll('.coin-item');
+    results.forEach(item => {
+        const symbol = item.getAttribute('data-symbol');
+        const pairKey = `${symbol}USDT`;
+        const priceElement = item.querySelector('.price');
+
+        if (priceElement) {
+            const pairData = state.data.find(p => p.symbol === pairKey);
+            if (pairData) {
+                const newPrice = formatter.price(pairData.lastPrice, pairKey);
+                // Only update if price changed to prevent unnecessary DOM updates
+                if (priceElement.textContent !== newPrice) {
+                    priceElement.textContent = newPrice;
+                    priceElement.classList.add('price-update');
+                    setTimeout(() => {
+                        priceElement.classList.remove('price-update');
+                    }, 500);
+                }
+            }
+        }
+    });
     }
 };
 
@@ -731,7 +759,7 @@ const modalHTML = `
                     <span class="current-price">Current: $${pairData?.lastPrice || 'N/A'}</span>
                     <span>@: ${new Date(highlightData.highlightTime).toLocaleString()}</span>
                 </div>
-                <textarea class="notes-textarea" placeholder="Type your notes here...">${highlightData.notes || ''}</textarea>
+                <textarea class="notes-textarea" placeholder="Ideas & Setups...">${highlightData.notes || ''}</textarea>
                 <div class="checkboxes-container">
                     ${(highlightData.checkboxes || [
                         {text: "Entry: ", checked: false},
@@ -1046,7 +1074,7 @@ updateHighlightTimer: (symbol) => {
                     [<span class="dollar-change ${dollarChange.colorClass}">${dollarChange.text}</span>
                     <span class="highlight-separator">|</span>
                     <span class="highlight-timer">${fullTimerText}</span> ]
-                    <span class="notes-icon ${hasNotes ? 'has-notes' : ''}" data-symbol="${symbol}">📝</span>
+                    <span class="notes-icon ${hasNotes ? 'has-notes' : ''}" data-symbol="${symbol}">📚</span>
                 </span>
             </span>
         `;
