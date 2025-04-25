@@ -1,61 +1,64 @@
-// theme.js
-function initThemeToggle() {
+// theme.js - Complete Theme Toggle with PNG Icon Support
+document.addEventListener('DOMContentLoaded', function() {
     const themeToggle = document.getElementById('themeToggle');
-    const icon = themeToggle.querySelector('i');
     
-    // Rest of your existing theme toggle functionality
+    // Check and apply saved theme preference
     function applyTheme(isLight) {
         if (isLight) {
             document.body.classList.add('light-theme');
             document.body.classList.remove('dark-theme');
-            icon.classList.replace('fa-moon', 'fa-sun');
+            localStorage.setItem('theme', 'light');
         } else {
             document.body.classList.add('dark-theme');
             document.body.classList.remove('light-theme');
-            icon.classList.replace('fa-sun', 'fa-moon');
+            localStorage.setItem('theme', 'dark');
         }
     }
     
-    function updateIcon(isLight) {
-        icon.classList.toggle('fa-sun', isLight);
-        icon.classList.toggle('fa-moon', !isLight);
-    }
-    
+    // Get system color scheme preference
     function getSystemPreference() {
         return window.matchMedia('(prefers-color-scheme: light)').matches;
     }
     
+    // Initialize theme on page load
     function initTheme() {
         const savedTheme = localStorage.getItem('theme');
-        const systemPrefersLight = getSystemPreference();
         
         if (savedTheme) {
+            // Use saved preference if exists
             applyTheme(savedTheme === 'light');
         } else {
-            applyTheme(systemPrefersLight);
+            // Fallback to system preference
+            applyTheme(getSystemPreference());
         }
     }
     
+    // Listen for system preference changes
     function setupSystemPreferenceListener() {
         const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: light)');
+
         colorSchemeQuery.addEventListener('change', (e) => {
+            // Only apply system preference if no user preference is set
             if (!localStorage.getItem('theme')) {
                 applyTheme(e.matches);
             }
         });
     }
     
+    // Set up theme toggle button
     function setupToggleButton() {
-        themeToggle.addEventListener('click', () => {
+        themeToggle.addEventListener('click', function() {
             const isLight = !document.body.classList.contains('light-theme');
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
             applyTheme(isLight);
         });
     }
     
-    initTheme();
-    setupSystemPreferenceListener();
-    setupToggleButton();
-}
+    // Initialize everything
+    function initThemeToggle() {
+        initTheme();
+        setupSystemPreferenceListener();
+        setupToggleButton();
+    }
 
-document.addEventListener('DOMContentLoaded', initThemeToggle);
+    initThemeToggle();
+});

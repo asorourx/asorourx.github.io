@@ -18,7 +18,7 @@ const CONFIG = {
   },
   defaults: {
     visiblePairs: 20,
-    totalPairs: 150,
+    totalPairs: 250,
     highlightStorageKey: 'highlightedPairsData', // Key for localStorage
     highlightTimerInterval: 1000, // Update timer every second
     pricePrecision: {          // Keep your original precision rules
@@ -321,7 +321,7 @@ loadInitialData: async () => {
     } catch (error) {
         console.error('Initial data load failed:', error);
         // Geo issues; VPN Required! 
-        ui.showLoading('Connect to VPN - retrying...');
+        ui.showLoading('¯\_(ツ)_/ VPN ?¯');
         setTimeout(dataManager.loadInitialData, 5000);
     } finally {
         state.isLoading = false;
@@ -677,17 +677,17 @@ renderTable: (callback) => {
     if (state.sortDirection.volume) {
         volumeHeader.classList.add('sort-active');
         volumeHeader.querySelector('.sort-indicator').textContent = 
-            state.sortDirection.volume === 'desc' ? '↓' : '↑';
+            state.sortDirection.volume === 'desc' ? '↖' : '↘';
         changeHeader.querySelector('.sort-indicator').textContent = '';
     } 
     else if (state.sortDirection.change) {
         changeHeader.classList.add('sort-active');
         changeHeader.querySelector('.sort-indicator').textContent = 
-            state.sortDirection.change === 'desc' ? '↓' : '↑';
+            state.sortDirection.change === 'desc' ? '↖' : '↘';
         volumeHeader.querySelector('.sort-indicator').textContent = '';
     }
     else {
-        volumeHeader.querySelector('.sort-indicator').textContent = '';
+        volumeHeader.querySelector('.sort-indicator').textContent = '↖↘';
         changeHeader.querySelector('.sort-indicator').textContent = '';
     }
     
@@ -722,14 +722,14 @@ const modalHTML = `
                      onerror="this.src='icons/cryptologos/generic.png'"
                      class="modal-pair-icon">
                 <h3>${symbol.replace('USDT', '')}</h3>
-                <span class="current-price">Current: $${pairData?.lastPrice || 'N/A'}</span>
             </div>
             <button class="close-notes-modal">&times;</button>
         </div>
             <div class="notes-modal-body">
                 <div class="pair-info">
-                    <span>Price: $${highlightData.highlightPrice}</span>
-                    <span>Highlighted at: ${new Date(highlightData.highlightTime).toLocaleString()}</span>
+                    <span>Price : $${highlightData.highlightPrice}</span>
+                    <span class="current-price">Current: $${pairData?.lastPrice || 'N/A'}</span>
+                    <span>@: ${new Date(highlightData.highlightTime).toLocaleString()}</span>
                 </div>
                 <textarea class="notes-textarea" placeholder="Type your notes here...">${highlightData.notes || ''}</textarea>
                 <div class="checkboxes-container">
@@ -1115,29 +1115,20 @@ updateFavicon: (status) => {
     const ctx = canvas.getContext('2d');
     
     // Set font and text alignment
-    ctx.font = '48px Arial, sans-serif';
+    ctx.font = 'bold 48px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     // Speed control: Adjust the divisor (200) for faster/slower spin
-
-
-    // Always spin (Spinning Speed) the Bitcoin symbol
-    const spinSpeed = 18; // <<< CHANGE THIS VALUE TO CONTROL SPEED
+    const spinSpeed = 8;
     const angle = (Date.now() / spinSpeed) % 360;
+
     ctx.save();
     ctx.translate(32, 32);
     ctx.rotate(angle * Math.PI / 180);
-    ctx.fillStyle = statusColors[status] || '#ffffff'; // Default to white if status unknown
+    ctx.fillStyle = statusColors[status] || '#ffffff';
     ctx.fillText('₿', 0, 0);
     ctx.restore();
-
-    // Continue animation
-    if (!state.faviconAnimation) {
-        state.faviconAnimation = setInterval(() => {
-            ui.updateFavicon(status);
-        }, 50);
-    }
 
     // Update favicon
     let favicon = document.querySelector('link[rel="icon"]');
@@ -1147,6 +1138,13 @@ updateFavicon: (status) => {
         document.head.appendChild(favicon);
     }
     favicon.href = canvas.toDataURL('image/png');
+
+    // Continue animation
+    if (!state.faviconAnimation) {
+        state.faviconAnimation = setInterval(() => {
+            this.updateFavicon(status);
+        }, 50);
+    }
 },
     // ===== CONTROLS SETUP =====
     setupControls: () => {
@@ -1347,17 +1345,22 @@ window.addEventListener('beforeunload', () => {
         state.faviconAnimation = null;
     }
 
-        // Set final static ₿ icon
+        if (state.faviconAnimation) {
+        clearInterval(state.faviconAnimation);
+        state.faviconAnimation = null;
+    }
+
+
+    // Set final static ₿ icon
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d');
-    ctx.font = '48px Arial, sans-serif';
+    ctx.font = 'bold 48px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#f0b90b'; // Gold color for Bitcoin symbol
+    ctx.fillStyle = '#f0b90b';
     ctx.fillText('₿', 32, 32);
-
 
     const favicon = document.querySelector('link[rel="icon"]');
     if (favicon) {

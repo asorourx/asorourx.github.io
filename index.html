@@ -6,6 +6,7 @@
     <title>amrx screener</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="src/css/styles.css">
+    <link rel="stylesheet" href="src/css/settings.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,7 +19,7 @@
     <div id="app">
         <!-- Search Container -->
         <div class="search-container" style="display: none;">
-            <input type="text" id="searchInput" placeholder="Search any Future/USDT...">
+            <input type="text" id="searchInput" placeholder="...">
             <div id="searchResults"></div>
         </div>
         
@@ -53,11 +54,19 @@
                                         <path d="M3.5 9a9 9 0 0 1 14-5.5L23 10M1 14l4.5 4.5A9 9 0 0 0 20.5 15"/>
                                     </svg>
                                 </button>
-                                <button id="TVScreen" class="tv-screen" title="TradingView Screen">T</button>
-                    <button id="themeToggle" class="theme-toggle-button" title="Toggle Light/Dark Mode">
-                        <i class="fas fa-moon"></i></button>
-                                <button id="settingsButton" class="header-button" title="Visual settings"><i class="fas fa-cog"></i></button>
-                                <!--Fear & Greed Gauge-->
+
+
+<button id="TVScreen" class="tv-screen" title="TradingView Screen">
+    <img src="icons/platforms/WTV.png" class="tv-icon light-icon" alt="TradingView">
+    <img src="icons/platforms/BTV.png" class="tv-icon dark-icon" alt="TradingView">
+</button>
+
+<button id="themeToggle" class="theme-toggle-button" title="Toggle Light/Dark Mode">
+    <img src="icons/platforms/lightmode.png" class="theme-icon light-icon" alt="Light Mode" width="24" height="24">
+    <img src="icons/platforms/darkmode.png" class="theme-icon dark-icon" alt="Dark Mode" width="24" height="24">
+</button>
+
+            <!--Fear & Greed Gauge-->
                                 <div id="fearGreedGauge" class="gauge-container">
                                     <svg viewBox="0 0 100 60" class="gauge-svg">
                                         <defs>
@@ -92,15 +101,29 @@
 
             <div class="mobile-menu">
     <div class="mobile-controls-box" id="mobileControlsBox" style="display: none;">
-        <button class="mobile-control-btn" id="mobilePauseButton" title="Pause">P</button>
+
+
+    <button class="mobile-control-btn" id="mobilePauseButton" title="Pause">P</button>
+
+
         <button class="mobile-control-btn" id="mobileRefreshButton" title="Refresh">
-                        <svg class="reload-icon" width="16" height="16" viewBox="0 0 24 24">
+                <svg class="reload-icon" width="16" height="16" viewBox="0 0 24 24">
                     <path d="M23 4v6h-6M1 20v-6h6" stroke="#f0b90b" stroke-width="2.5"/>
                     <path d="M3.5 9a9 9 0 0 1 14-5.5L23 10M1 14l4.5 4.5A9 9 0 0 0 20.5 15" stroke="#f0b90b" stroke-width="2.5"/>
                 </svg>
         </button>
-        <button class="mobile-control-btn" id="mobileTVScreen" title="TradingView">T</button>
-        <button class="mobile-control-btn" id="mobileThemeToggle" title="Theme"><i class="fas fa-moon"></i></button>
+
+<button id="mobileTVScreen" class="tv-screen" title="TradingView Screen">
+    <img src="icons/platforms/WTV.png" class="tv-icon light-icon" alt="TradingView">
+    <img src="icons/platforms/BTV.png" class="tv-icon dark-icon" alt="TradingView">
+</button>
+
+<button id="mobileThemeToggle" class="theme-toggle-button" title="Toggle Light/Dark Mode">
+    <img src="icons/platforms/lightmode.png" class="theme-icon light-icon" alt="Light Mode" width="24" height="24">
+    <img src="icons/platforms/darkmode.png" class="theme-icon dark-icon" alt="Dark Mode" width="24" height="24">
+</button>
+
+
         <button class="mobile-control-btn" id="mobileSettingsButton" title="Settings"><i class="fas fa-cog"></i></button>
     </div>
                     <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
@@ -125,44 +148,55 @@
             <button id="showMoreButton" class="show-more-button">Show More</button>
         </div>
         
-        <!-- Settings Panel -->
-        <div id="visualSettingsPanel" class="settings-panel" style="display: none;">
-            <div class="settings-header">
-                <h3>Settings</h3>
-                <button class="close-settings">&times;</button>
-            </div>
-            <div class="settings-content">
+<!-- Settings Panel -->
+<div id="visualSettingsPanel" class="settings-panel" style="display: none;">
+    <div class="settings-header">
+        <h3>Settings</h3>
+        <button class="close-settings">&times;</button>
+    </div>
 
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="toggleVisualFeedback" checked>
-                        Enable Visual Feedback
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>Flash Duration:</label>
-                    <div style="display: flex; align-items: center;">
-                        <input type="range" id="animationDuration" min="500" max="3000" value="1500" step="100">
-                        <span id="durationValue">1500ms</span>
-                    </div>
-                </div>
-                <div class="setting-item">
-                    <label>Up:</label>
-                    <input type="color" id="upColorPicker" value="#0ecb81">
-                </div>
-                <div class="setting-item">
-                    <label>Down:</label>
-                    <input type="color" id="downColorPicker" value="#f6465d">
-                </div>
+    <!-- Top Row -->
+    <div class="settings-top-row">
+        <!-- Toggle -->
+        <div class="setting-item toggle-container">
+            <label>
+                <input type="checkbox" id="toggleVisualFeedback" checked>
+                Visual
+            </label>
+        </div>
+
+        <!-- Up Color -->
+        <div class="setting-item color-pickers">
+            <span class="color-label"></span>
+            <input type="color" id="upColorPicker" value="#0ecb81">
+        </div>
+
+        <!-- Down Color -->
+        <div class="setting-item color-pickers">
+            <span class="color-label"></span>
+            <input type="color" id="downColorPicker" value="#f6465d">
+        </div>
+    </div>
+
+    <!-- Other Settings -->
+    <div class="settings-content">
+        <div class="setting-item">
+            <label>Flash:</label>
+            <div style="display: flex; align-items: center;">
+                <input type="range" id="animationDuration" min="500" max="3000" value="1500" step="100">
+                <span id="durationValue">1500ms</span>
             </div>
-            <div class="setting-item">
-        <label>Font Size:</label>
-        <div style="display: flex; align-items: center;">
-        <input type="range" id="fontSizeAdjuster" min="10" max="30" value="14" step="1">
-        <span id="fontSizeValue">14px</span>
+        </div>
+
+        <div class="setting-item">
+            <label>Font :</label>
+            <div style="display: flex; align-items: center;">
+                <input type="range" id="fontSizeAdjuster" min="10" max="30" value="14" step="1">
+                <span id="fontSizeValue">14px</span>
+            </div>
+        </div>
     </div>
 </div>
-        </div>
 
         <script>
 document.getElementById('add-feedback-setting').addEventListener('click', function () {

@@ -21,7 +21,7 @@ body {
     display: flex;
     flex-direction: column;
 
-        max-width: none; /* Remove max-width constraint */
+    max-width: none; /* Remove max-width constraint */
     width: calc(100vw - 30px); /* Account for padding */
     height: calc(100vh - 30px); /* Account for padding */
     margin: 0;
@@ -38,7 +38,7 @@ table {
     white-space: nowrap;
     min-width: 100%;
     flex-grow: 1; /* Makes table expand to fill available space */
-        width: 100%;
+    width: 100%;
     height: calc(100% - 40px); /* Adjust based on your header height */
     max-height: none; /* Remove max-height constraint */
     margin: 0;
@@ -69,26 +69,6 @@ td {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-
-/* Skeleton loading styles */
-.skeleton {
-	background-color: #2a2f3d;
-	background-image: linear-gradient(90deg, #2a2f3d, #3a3f4d, #2a2f3d);
-	background-size: 200% 100%;
-	animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-	0% {
-		background-position: 200% 0;
-	}
-
-	100% {
-		background-position: -200% 0;
-	}
-}
-
-/* END OF Skeleton loading styles */
 
 th:nth-child(1),
 td:nth-child(1) {
@@ -300,20 +280,101 @@ tr:hover {
     transform: scale(1.2);
 }
 
+/* TradingView Button with Theme-Specific Icons */
 .tv-screen {
-	background: #2a2f3d;
-	color: #f0b90b;
-	border: 1px solid #f0b90b;
-	border-radius: 50%;
-	width: 24px;
-	height: 24px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	font-size: 12px;
-	font-weight: bold;
-	transition: all 0.2s;
+    background: #2a2f3d;
+    border: 1px solid #f0b90b;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.tv-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
+    position: absolute;
+}
+
+/* Show white icon in dark theme */
+body:not(.light-theme) .tv-icon.light-icon {
+    opacity: 1;
+}
+body:not(.light-theme) .tv-icon.dark-icon {
+    opacity: 0;
+}
+
+/* Show black icon in light theme */
+body.light-theme .tv-icon.light-icon {
+    opacity: 0;
+}
+body.light-theme .tv-icon.dark-icon {
+    opacity: 1;
+}
+
+body:not(.light-theme) .theme-icon.light-icon {
+    opacity: 1;
+}
+body:not(.light-theme) .theme-icon.dark-icon {
+    opacity: 0;
+}
+body.light-theme .theme-icon.light-icon {
+    opacity: 0;
+}
+body.light-theme .theme-icon.dark-icon {
+    opacity: 1;
+}
+
+.tv-screen:hover {
+    background: #3a3f4d;
+    transform: scale(1.1);
+}
+
+.tv-screen:active {
+    transform: scale(0.95);
+}
+
+/* Tooltip */
+.tv-screen::after {
+    content: "TradingView";
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a2f3d;
+    color: #f0b90b;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.tv-screen:hover::after {
+    opacity: 1;
+}
+
+/* Light theme adjustments */
+body.light-theme .tv-screen {
+    background: #e0e0e0;
+    border-color: #333;
+}
+
+body.light-theme .tv-screen::after {
+    background: #f5f5f5;
+    color: #333;
+    border: 1px solid #d0d0d0;
 }
 
 .tv-screen:hover {
@@ -504,6 +565,7 @@ tr:hover {
     outline: none;
     box-shadow: 0 0 0 2px rgba(240, 185, 11, 0.2);
 }
+
 /* Search Results */
 #searchResults {
     max-height: calc(80vh - 60px); /* Account for input and padding */
@@ -827,103 +889,6 @@ tr:hover {
 	font-size: 14px;
 }
 
-/* Visual Feedback Settings Panel */
-.settings-panel {
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	background: #2a2f3d;
-	border: 1px solid #f0b90b;
-	border-radius: 4px;
-	padding: 12px;
-	z-index: 1000;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-	width: 350px;
-	display: none;
-}
-
-.settings-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(15, 25, 35, 0.7);
-	z-index: 999;
-	display: none;
-}
-
-.settings-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 15px;
-	padding-bottom: 10px;
-	border-bottom: 1px solid #3a3f4d;
-}
-
-.settings-header h3 {
-	margin: 0;
-	color: #f0b90b;
-	font-size: 1.1em;
-}
-
-.close-settings {
-	background: none;
-	border: none;
-	color: #f0b90b;
-	font-size: 24px;
-	cursor: pointer;
-	line-height: 1;
-	padding: 0 5px;
-}
-
-.close-settings:hover {
-	color: #e31919;
-}
-
-.settings-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-.setting-item {
-	display: flex;
-	flex-direction: column;
-	gap: 5px;
-}
-
-.setting-item label {
-	color: #eaeaea;
-	font-size: 0.9em;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.setting-item input[type="checkbox"] {
-	accent-color: #f0b90b;
-}
-
-.setting-item input[type="range"] {
-	width: 100%;
-	margin: 0;
-}
-
-.setting-item input[type="color"] {
-	width: 30px;
-	height: 30px;
-}
-
-#durationValue {
-	margin-left: 8px;
-	min-width: 40px;
-	text-align: left;
-}
-
-/*End of Visual Feedback */
 
 /* Fear & Greed Index Popup */
 .fear-greed-popup-overlay {
@@ -950,7 +915,7 @@ tr:hover {
 	width: 90%;
 	max-width: 500px;
 	background: #1a1e27;
-	border: 1px solid #f0b90b;
+	/* border: 1px solid #f0b90b; */
 	border-radius: 6px;
 	padding: 15px;
 	z-index: 3001;
@@ -958,6 +923,17 @@ tr:hover {
 	max-height: 80vh;
 	overflow-y: auto;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.fear-greed-popup::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #f0b90b, #0ecb81, #f6465d);
+  opacity: 0.7;
 }
 
 .fear-greed-popup.show {
@@ -1183,22 +1159,6 @@ tr:hover {
 	}
 }
 
-/* Stalling Pairs */
-.stale-pair {
-	opacity: 0.6;
-	position: relative;
-}
-
-.stale-pair::after {
-	content: "STALE";
-	position: absolute;
-	right: 5px;
-	top: 2px;
-	font-size: 9px;
-	color: #f0b90b;
-}
-
-/* Add to styles.css */
 .paused-state {
 	color: #f0b90b;
 	font-weight: bold;
@@ -1354,18 +1314,27 @@ tr:hover {
 }
 
 .theme-toggle-button {
-	background: #2a2f3d;
-	color: #f0b90b;
-	border: 1px solid #f0b90b;
-	border-radius: 50%;
-	width: 24px;
-	height: 24px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	font-size: 12px;
-	transition: all 0.2s;
+    background: #2a2f3d;
+    border: 1px solid #f0b90b;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
+    position: absolute;
 }
 
 .theme-toggle-button:hover {
@@ -1685,7 +1654,7 @@ button.touch-active {
     padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 60px;
     box-shadow: none;
 }
 
@@ -1693,20 +1662,20 @@ button.touch-active {
 .mobile-arrows-box {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 6px;
+    gap: 10px;
+    margin-top: 12px;
     align-items: flex-end;
 }
 
 /* Control Buttons */
 .mobile-control-btn {
-    width: 25px;
-    height: 25px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: transparent;
     border: 1px solid #f0b90b;
     color: #f0b90b;
-    display: flex;
+    display: center;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -1721,14 +1690,14 @@ button.touch-active {
     border: 1px solid #f0b90b;
     border-radius: 6px;
     padding: 8px 10px;
-    font-size: 16px;
+    font-size: 20px;
     cursor: pointer;
     transition: background 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
 }
 
 /* Base styles for all views */
@@ -1887,8 +1856,8 @@ button.touch-active {
 
 /* Crypto Icon Styles */
 .crypto-icon {
-    width: 20px;
-    height: 20px;
+    width: 21px;
+    height: 21px;
     vertical-align: middle;
     margin-right: 2px;
     opacity: 0.7;
@@ -1970,11 +1939,11 @@ button.touch-active {
 }
 
 .mobile-menu-toggle {
-    background: #2a2f3d;
+    background: transparent;
     color: #f0b90b;
     border: 1px solid #f0b90b;
     border-radius: 4px;
-    font-size: 18px;
+    font-size: 26px;
     padding: 2px 6px;
     cursor: pointer;
     box-shadow: 0 0 6px rgba(107, 98, 98, 0.4);
@@ -2045,7 +2014,7 @@ button.touch-active {
     cursor: grabbing;
 }
 .current-price {
-    font-size: 13px;
+    font-size: 12px;
     margin-top: 1px;
     font-weight: 500;
 }
@@ -2112,7 +2081,7 @@ body.light-theme .modal-pair-icon {
     flex-direction: column;
     gap: 5px;
     margin-bottom: 8px;
-    font-size: 13px;
+    font-size: 12px;
     color: #8a8a8a;
 }
 
