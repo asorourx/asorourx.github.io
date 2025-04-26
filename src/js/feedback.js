@@ -71,12 +71,18 @@ function updateFontSize() {
     }
     
     // Close settings function
-    function closeSettings() {
-        elements.settingsPanel.style.display = 'none';
-        elements.settingsOverlay.style.display = 'none';
-        elements.settingsPanel.setAttribute('aria-hidden', 'true');
-        document.removeEventListener('keydown', handleKeyDown);
+function closeSettings() {
+    // 🧠 Fix: Remove focus from any child of the panel
+    if (elements.settingsPanel.contains(document.activeElement)) {
+        document.activeElement.blur();
     }
+
+    elements.settingsPanel.style.display = 'none';
+    elements.settingsOverlay.style.display = 'none';
+    elements.settingsPanel.setAttribute('aria-hidden', 'true');
+    document.removeEventListener('keydown', handleKeyDown);
+}
+
     
     // Open settings function
     function openSettings() {
