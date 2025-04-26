@@ -391,197 +391,214 @@ function debounce(fn, delay) {
 // ===== SEARCH MANAGER =====
 const searchManager = {
     searchActive: false,
-init: function () {
+    selectedResultIndex: -1,
 
-    // Keyboard shortcut to open search
-    document.addEventListener('keydown', (e) => {
-        // Only trigger search shortcut if not already in search input
-        if (e.key === '/' && document.activeElement !== elements.searchInput) {
-            e.preventDefault();
-            this.showSearch();
-            elements.searchInput.focus();
-        }
-        
-        // Close search with Escape
-        if (e.key === 'Escape' && elements.searchContainer.classList.contains('active')) {
-            e.preventDefault();
-            this.hideSearch();
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-    // Only trigger search shortcut if not in notes modal or inputs
-    if (e.key === '/' &&
-        !state.isNotesModalOpen &&
-        document.activeElement !== elements.searchInput) {
-        e.preventDefault();
-        this.showSearch();
-        elements.searchInput.focus();
-    }
-
-    // Close search with Escape (but allow it to work in notes modal)
-    if (e.key === 'Escape' &&
-        elements.searchContainer.classList.contains('active') &&
-        !state.isNotesModalOpen) {
-        e.preventDefault();
-        this.hideSearch();
-    }
-});
-
-    // Click outside to close
-    document.addEventListener('click', (e) => {
-        if (!elements.searchContainer.contains(e.target) && 
-            e.target !== elements.searchButton &&
-            elements.searchContainer.classList.contains('active')) {
-            this.hideSearch();
-        }
-    });
-
-// Handle keyboard navigation in search results
-elements.searchInput.addEventListener('keydown', (e) => {
-    const items = Array.from(elements.searchResults.querySelectorAll('.coin-item'));
-    
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault(); // Prevent default scrolling behavior
-        
-        if (!items.length) return;
-
-        // Get current focused item
-        const currentActive = document.activeElement;
-        let currentIndex = items.indexOf(currentActive);
-        
-        if (e.key === 'ArrowDown') {
-            const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
-            items[nextIndex].focus();
-            // Scroll the search results container, not the page
-            items[nextIndex].scrollIntoView({ 
-                block: 'nearest',
-                behavior: 'smooth',
-                inline: 'nearest'
-            });
-        } 
-        else if (e.key === 'ArrowUp') {
-            if (currentIndex <= 0) {
-                elements.searchInput.focus();
-            } else {
-                items[currentIndex - 1].focus();
-                items[currentIndex - 1].scrollIntoView({ 
-                    block: 'nearest',
-                    behavior: 'smooth',
-                    inline: 'nearest'
-                });
+    init: function() {
+        // Keyboard shortcut to open search
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && !this.searchActive &&
+                document.activeElement !== elements.searchInput &&
+                !state.isNotesModalOpen) {
+                e.preventDefault();
+                this.showSearch();
             }
-        }
-    }
-    else if (e.key === 'Enter') {
-        e.preventDefault();
-        const focusedItem = document.activeElement;
-        if (items.includes(focusedItem)) {
-            focusedItem.click();
-        } else if (items.length > 0) {
-            items[0].click();
-        }
-    }
-});
-
-    // Debounced search input
-// Replace the current search input event listener with this:
-elements.searchInput.addEventListener('input', debounce((e) => {
-    const query = e.target.value.trim().toUpperCase();
-    if (!query) {
-        elements.searchResults.innerHTML = '';
-        elements.searchResults.style.display = 'none';
-        return;
-    }
-
-    const filtered = state.data.filter(item => {
-        const symbol = item.symbol.toUpperCase();
-        const base = item.symbol.replace('USDT', '').toUpperCase();
-        return symbol.includes(query) || base.includes(query);
-    }).slice(0, 10);
-
-    this.renderResults(filtered);
-}, 300));
-},
-
-
-
-
-showSearch: function() {
-    this.searchActive = true;
-    elements.searchContainer.style.display = 'block';
-    elements.searchInput.focus();
-    elements.searchInput.value = '';
-    elements.searchResults.innerHTML = '';
-    elements.searchContainer.classList.add('active');
-    this.updateSearchPrices(); // Add this line
-},
-
-hideSearch: function() {
-    this.searchActive = false;
-    elements.searchContainer.style.display = 'none';
-    elements.searchInput.value = '';
-    elements.searchResults.innerHTML = '';
-    elements.searchContainer.classList.remove('active');
-    document.getElementById('searchButton').classList.remove('active');
-    document.getElementById('searchButton').focus();
-},
-renderResults: function(results) {
-    elements.searchResults.innerHTML = '';
-    
-    if (!results || results.length === 0) {
-        elements.searchResults.innerHTML = [
-            '<div class="no-results">',
-            '<div>No matching pairs found</div>',
-            '<small>Try a different search term</small>',
-            '</div>'
-        ].join('');
-        elements.searchResults.style.display = 'block';
-        return;
-    }
-
-    results.forEach(function(item) {
-        var baseSymbol = item.symbol.replace('USDT', '').toLowerCase();
-        var resultItem = document.createElement('div');
-        resultItem.className = 'coin-item';
-        resultItem.tabIndex = 0;
-resultItem.innerHTML = [
-    '<div class="coin-content">',
-    '<img src="icons/cryptologos/', baseSymbol, '.png" ',
-    'onerror="this.onerror=null;this.src=\'icons/cryptologos/generic.png\'" ',
-    'class="search-crypto-icon" width="18" height="18">',
-    '<span class="pair-name">', item.symbol.replace('USDT', ''), '</span>',
-    '</div>',
-    '<div class="price-section">',
-    '<span class="price">', formatter.price(item.lastPrice, item.symbol), '</span>',
-    '<div class="platform-icons">',
-    '<a href="https://www.bybit.com/future/', baseSymbol, '-USDT" target="_blank" class="platform-link">',
-    '<img src="icons/platforms/bybit.png" width="18" height="18" alt="ByBit">',
-    '</a>',
-    '<a href="https://www.binance.com/en/trade/', baseSymbol, '_USDT" target="_blank" class="platform-link">',
-    '<img src="icons/platforms/binance.png" width="18" height="18" alt="Binance">',
-    '</a>',
-    '<a href="https://www.gateio.com/future/', baseSymbol, '-USDT" target="_blank" class="platform-link">',
-    '<img src="icons/platforms/gateio.png" width="18" height="18" alt="Gateio">',
-    '</a>',
-    '<a href="https://www.tradingview.com/future/', baseSymbol, '-USDT" target="_blank" class="platform-link">',
-    '<img src="icons/platforms/WTV.png" width="18" height="18" alt="TradingView">',
-    '</a>',
-    '</div>',
-    '</div>'
-].join('');
-        
-        resultItem.addEventListener('click', function() {
-            searchManager.handleSelect(item.symbol);
         });
-        elements.searchResults.appendChild(resultItem);
-    });
-    
-    elements.searchResults.style.display = 'block';
-},
 
-    handleSelect: function (symbol) {
-        const isHighlighted = state.highlightedPairs[symbol]?.isHighlighted;
+        // Search input keyboard handling
+        elements.searchInput.addEventListener('keydown', (e) => {
+            if (!this.searchActive) return;
+
+            const items = Array.from(elements.searchResults.querySelectorAll('.coin-item'));
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (items.length === 0) return;
+
+                    // Clear previous selection
+                    if (this.selectedResultIndex >= 0) {
+                        items[this.selectedResultIndex].classList.remove('selected');
+                    }
+
+                    // Move to next item (or first if none selected)
+                    this.selectedResultIndex =
+                        this.selectedResultIndex < items.length - 1 ?
+                        this.selectedResultIndex + 1 : 0;
+
+                    this.highlightItem(items[this.selectedResultIndex]);
+                    break;
+
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (items.length === 0) return;
+
+                    // Clear previous selection
+                    if (this.selectedResultIndex >= 0) {
+                        items[this.selectedResultIndex].classList.remove('selected');
+                    }
+
+                    // Move to previous item (or last if none selected)
+                    this.selectedResultIndex =
+                        this.selectedResultIndex > 0 ?
+                        this.selectedResultIndex - 1 : items.length - 1;
+
+                    this.highlightItem(items[this.selectedResultIndex]);
+                    break;
+
+                case 'Enter':
+                    e.preventDefault();
+                    if (this.selectedResultIndex >= 0 && items[this.selectedResultIndex]) {
+                        items[this.selectedResultIndex].click();
+                    }
+                    break;
+
+                case 'Escape':
+                    e.preventDefault();
+                    this.hideSearch();
+                    break;
+            }
+        });
+
+        // Prevent default behavior for Tab key in search results
+        elements.searchResults.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+            }
+        });
+        
+                // Prevent page scroll when navigating search results
+        elements.searchResults.addEventListener('keydown', (e) => {
+            if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+
+        // Click outside to close
+        document.addEventListener('click', (e) => {
+            if (this.searchActive &&
+                !elements.searchContainer.contains(e.target) &&
+                e.target !== elements.searchButton) {
+                this.hideSearch();
+            }
+        });
+
+        // Debounced search input
+        elements.searchInput.addEventListener('input', debounce((e) => {
+            const query = e.target.value.trim().toUpperCase();
+            this.selectedResultIndex = -1;
+
+            if (!query) {
+                elements.searchResults.innerHTML = '';
+                elements.searchResults.style.display = 'none';
+                return;
+            }
+
+            const filtered = state.data.filter((item) => {
+                const symbol = item.symbol.toUpperCase();
+                const base = item.symbol.replace('USDT', '').toUpperCase();
+                return symbol.includes(query) || base.includes(query);
+            }).slice(0, 10);
+
+            this.renderResults(filtered);
+        }, 300));
+    },
+
+    highlightItem: function(item) {
+        // Remove selection from all items first
+        const items = elements.searchResults.querySelectorAll('.coin-item');
+        items.forEach((i) => i.classList.remove('selected'));
+
+        // Add selection to current item
+        item.classList.add('selected');
+        item.focus();
+        item.scrollIntoView({
+            block: 'nearest',
+            behavior: 'smooth'
+        });
+    },
+
+    showSearch: function() {
+        this.searchActive = true;
+        this.selectedResultIndex = -1;
+        elements.searchContainer.style.display = 'block';
+        elements.searchInput.value = '';
+        elements.searchResults.innerHTML = '';
+        elements.searchContainer.classList.add('active');
+        elements.searchInput.focus();
+    },
+
+    hideSearch: function() {
+        this.searchActive = false;
+        this.selectedResultIndex = -1;
+        elements.searchContainer.style.display = 'none';
+        elements.searchInput.value = '';
+        elements.searchResults.innerHTML = '';
+        elements.searchContainer.classList.remove('active');
+        document.getElementById('searchButton').classList.remove('active');
+    },
+    renderResults: function(results) {
+        elements.searchResults.innerHTML = '';
+        this.selectedResultIndex = -1;
+        
+        if (!results || results.length === 0) {
+            elements.searchResults.innerHTML = '<div class="no-results">No matching pairs found</div>';
+            elements.searchResults.style.display = 'block';
+            return;
+        }
+
+        results.forEach((item, index) => {
+            const baseSymbol = item.symbol.replace('USDT', '').toLowerCase();
+            const priceChange = parseFloat(item.priceChangePercent);
+            const priceClass = priceChange >= 0 ? 'up' : 'down';
+
+            const resultItem = document.createElement('div');
+            resultItem.className = 'coin-item';
+            resultItem.tabIndex = 0;
+            resultItem.setAttribute('data-symbol', item.symbol);
+            resultItem.innerHTML = `
+                <div class="coin-content">
+                    <img src="icons/cryptologos/${baseSymbol}.png"
+                         onerror="this.onerror=null;this.src='icons/cryptologos/generic.png'"
+                         class="search-crypto-icon" width="18" height="18">
+                    <span class="pair-name">${item.symbol.replace('USDT', '')}</span>
+                </div>
+                <div class="price-section">
+                    <span class="price ${priceClass}">${formatter.price(item.lastPrice, item.symbol)}</span>
+                    <div class="platform-icons">
+                        ${this.getPlatformIcons(baseSymbol)}
+                    </div>
+                </div>
+            `;
+
+            resultItem.addEventListener('click', () => {
+                this.handleSelect(item.symbol);
+            });
+            elements.searchResults.appendChild(resultItem);
+        });
+
+        elements.searchResults.style.display = 'block';
+    },
+
+    getPlatformIcons: function(baseSymbol) {
+        return `
+            <a href="https://www.bybit.com/future/${baseSymbol}-USDT" target="_blank" class="platform-link">
+                <img src="icons/platforms/bybit.png" width="18" height="18" alt="ByBit">
+            </a>
+            <a href="https://www.binance.com/en/trade/${baseSymbol}_USDT" target="_blank" class="platform-link">
+                <img src="icons/platforms/binance.png" width="18" height="18" alt="Binance">
+            </a>
+            <a href="https://www.gateio.com/future/${baseSymbol}-USDT" target="_blank" class="platform-link">
+                <img src="icons/platforms/gateio.png" width="18" height="18" alt="Gateio">
+            </a>
+            <a href="https://www.tradingview.com/future/${baseSymbol}-USDT" target="_blank" class="platform-link">
+                <img src="icons/platforms/WTV.png" width="18" height="18" alt="TradingView">
+            </a>
+        `;
+    },
+
+    handleSelect: function(symbol) {
+        const isHighlighted = state.highlightedPairs[symbol] && state.highlightedPairs[symbol].isHighlighted;
         const row = document.querySelector(`tr[data-symbol="${symbol}"]`);
 
         if (isHighlighted) {
@@ -605,30 +622,34 @@ resultItem.innerHTML = [
             });
         }
     },
-    updateSearchPrices() {
-    if (!this.searchActive) return;
 
-    const results = this.config.searchResults.querySelectorAll('.coin-item');
-    results.forEach(item => {
-        const symbol = item.getAttribute('data-symbol');
-        const pairKey = `${symbol}USDT`;
-        const priceElement = item.querySelector('.price');
+    updateSearchPrices: function() {
+        if (!this.searchActive) return;
 
-        if (priceElement) {
-            const pairData = state.data.find(p => p.symbol === pairKey);
-            if (pairData) {
-                const newPrice = formatter.price(pairData.lastPrice, pairKey);
-                // Only update if price changed to prevent unnecessary DOM updates
-                if (priceElement.textContent !== newPrice) {
-                    priceElement.textContent = newPrice;
-                    priceElement.classList.add('price-update');
-                    setTimeout(() => {
-                        priceElement.classList.remove('price-update');
-                    }, 500);
+        const results = elements.searchResults.querySelectorAll('.coin-item');
+        results.forEach((item) => {
+            const symbol = item.getAttribute('data-symbol');
+            const priceElement = item.querySelector('.price');
+
+            if (priceElement) {
+                const pairData = state.data.find((p) => p.symbol === symbol);
+                if (pairData) {
+                    const newPrice = formatter.price(pairData.lastPrice, symbol);
+                    const priceChange = parseFloat(pairData.priceChangePercent);
+                    const priceClass = priceChange >= 0 ? 'up' : 'down';
+
+                    // Only update if price changed to prevent unnecessary DOM updates
+                    if (priceElement.textContent !== newPrice) {
+                        priceElement.textContent = newPrice;
+                        priceElement.className = 'price ' + priceClass;
+                        priceElement.classList.add('price-update');
+                        setTimeout(() => {
+                            priceElement.classList.remove('price-update');
+                        }, 500);
+                    }
                 }
             }
-        }
-    });
+        });
     }
 };
 
@@ -1087,7 +1108,7 @@ updateHighlightTimer: (symbol) => {
     }
 },
 
-    // ===== CONNECTION STATUS =====
+ // ===== CONNECTION STATUS =====
 updateConnectionStatus: () => {
     const statusMap = {
         'connected': ['🟢', 'connected'],
@@ -1143,20 +1164,29 @@ updateFavicon: (status) => {
     const ctx = canvas.getContext('2d');
     
     // Set font and text alignment
-    ctx.font = 'bold 48px Arial, sans-serif';
+    ctx.font = '60px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     // Speed control: Adjust the divisor (200) for faster/slower spin
-    const spinSpeed = 8;
-    const angle = (Date.now() / spinSpeed) % 360;
 
+
+    // Always spin (Spinning Speed) the Bitcoin symbol
+    const spinSpeed = 3; // <<< CHANGE THIS VALUE TO CONTROL SPEED
+    const angle = (Date.now() / spinSpeed) % 360;
     ctx.save();
     ctx.translate(32, 32);
     ctx.rotate(angle * Math.PI / 180);
-    ctx.fillStyle = statusColors[status] || '#ffffff';
+    ctx.fillStyle = statusColors[status] || '#ffffff'; // Default to white if status unknown
     ctx.fillText('₿', 0, 0);
     ctx.restore();
+
+    // Continue animation
+    if (!state.faviconAnimation) {
+        state.faviconAnimation = setInterval(() => {
+            ui.updateFavicon(status);
+        }, 50);
+    }
 
     // Update favicon
     let favicon = document.querySelector('link[rel="icon"]');
@@ -1166,13 +1196,6 @@ updateFavicon: (status) => {
         document.head.appendChild(favicon);
     }
     favicon.href = canvas.toDataURL('image/png');
-
-    // Continue animation
-    if (!state.faviconAnimation) {
-        state.faviconAnimation = setInterval(() => {
-            this.updateFavicon(status);
-        }, 50);
-    }
 },
     // ===== CONTROLS SETUP =====
     setupControls: () => {
@@ -1193,7 +1216,6 @@ updateFavicon: (status) => {
                             block: 'nearest'
                         });
                     }
-                    ui.showTempMessage(`Showing ${state.visibleCount} pairs`);
                 });
             }
         };
@@ -1373,22 +1395,17 @@ window.addEventListener('beforeunload', () => {
         state.faviconAnimation = null;
     }
 
-        if (state.faviconAnimation) {
-        clearInterval(state.faviconAnimation);
-        state.faviconAnimation = null;
-    }
-
-
-    // Set final static ₿ icon
+        // Set final static ₿ icon
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d');
-    ctx.font = 'bold 48px Arial, sans-serif';
+    ctx.font = '48px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#f0b90b';
+    ctx.fillStyle = '#f0b90b'; // Gold color for Bitcoin symbol
     ctx.fillText('₿', 32, 32);
+
 
     const favicon = document.querySelector('link[rel="icon"]');
     if (favicon) {

@@ -495,10 +495,10 @@ body.light-theme .tv-screen::after {
 	opacity: 1;
 }
 
-/* Improved Search Container */
+/* Search Container */
 .search-container {
     position: fixed;
-    top: 50px;
+    top: 90px;
     left: 50%;
     transform: translateX(-50%);
     width: 400px;
@@ -507,7 +507,7 @@ body.light-theme .tv-screen::after {
     background: #2a2f3d;
     padding: 10px;
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
     border: 1px solid #3a3f4d;
     display: none;
     max-height: 80vh;
@@ -538,7 +538,7 @@ body.light-theme .tv-screen::after {
 /* Search Input */
 #searchInput {
     width: 100%;
-    padding: 10px 14px;
+    padding: 10px 10px;
     font-size: 14px;
     background: #1a1e27;
     color: #eaeaea;
@@ -556,15 +556,13 @@ body.light-theme .tv-screen::after {
 
 /* Search Results */
 #searchResults {
-    max-height: calc(80vh - 60px); /* Account for input and padding */
+    max-height: calc(80vh - 60px);
     overflow-y: auto;
     border-radius: 4px;
     background: #1a1e27;
     border: 1px solid #3a3f4d;
     display: none;
     scroll-behavior: smooth;
-    overscroll-behavior: contain;
-	
 }
 #searchButton::after {
     position: absolute;
@@ -573,7 +571,7 @@ body.light-theme .tv-screen::after {
     transform: translateX(-50%);
     background: #2a2f3d;
     color: #f0b90b;
-    padding: 2px 6px;
+    padding: 2px 4px;
     border-radius: 3px;
     font-size: 10px;
     opacity: 0;
@@ -2194,4 +2192,17 @@ body, table, th, td, .pair-name, .price, .change-percent, .volume-value {
 .price-update {
     animation: pricePulse 0.5s ease;
     color: #0ecb81 !important;
+}
+
+.coin-item.selected {
+    background-color: rgba(240, 185, 11, 0.2) !important;
+    outline: 1px solid #f0b90b;
+}
+
+.coin-item:focus {
+    outline: 2px solid #f0b90b;
+}
+/* Prevent focus on search container */
+.search-container:focus {
+    outline: none;
 }
