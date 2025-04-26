@@ -27,7 +27,8 @@ const state = {
         upColor: localStorage.getItem('upColor') || '#0ecb81',
         downColor: localStorage.getItem('downColor') || '#f6465d',
         fontSize: parseInt(localStorage.getItem('fontSize')) || 14
-    }
+    },
+    highlightedPairs: {} // Initialize if needed
 };
     
     // Helper function to convert hex to rgba
@@ -71,18 +72,12 @@ function updateFontSize() {
     }
     
     // Close settings function
-function closeSettings() {
-    // 🧠 Fix: Remove focus from any child of the panel
-    if (elements.settingsPanel.contains(document.activeElement)) {
-        document.activeElement.blur();
+    function closeSettings() {
+        elements.settingsPanel.style.display = 'none';
+        elements.settingsOverlay.style.display = 'none';
+        elements.settingsPanel.setAttribute('aria-hidden', 'true');
+        document.removeEventListener('keydown', handleKeyDown);
     }
-
-    elements.settingsPanel.style.display = 'none';
-    elements.settingsOverlay.style.display = 'none';
-    elements.settingsPanel.setAttribute('aria-hidden', 'true');
-    document.removeEventListener('keydown', handleKeyDown);
-}
-
     
     // Open settings function
     function openSettings() {
@@ -182,6 +177,11 @@ elements.fontSizeAdjuster.addEventListener('input', (e) => {
         localStorage.setItem('fontSize', '14');
     }
 }
+
+// Initialize when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    highlightListManager.init();
+});
     
     // Initialize the settings
     cleanupOldStorage();

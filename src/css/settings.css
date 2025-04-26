@@ -38,7 +38,7 @@
 
 /* Rest of your existing settings panel styles */
 .settings-panel {
-  position: absolute;
+  position: fixed;
   top: 165px;
   right: 15px;
   background: #2a2f3d;
@@ -48,13 +48,22 @@
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
   width: 300px;
   display: none;
-  z-index: 1000;
+  z-index: 1001;
   animation: fadeInSlide 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   backdrop-filter: blur(4px);
   background-color: rgba(42, 47, 61, 0.95);
   overflow: hidden;
 }
-
+.settings-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    display: none;
+}
 @keyframes fadeInSlide {
   from {
     opacity: 0;
@@ -250,7 +259,9 @@ body.light-theme .settings-panel {
   background-color: rgba(245, 245, 245, 0.95);
   border-color: rgba(210, 210, 210, 0.5);
 }
-
+body.light-theme .settings-overlay {
+    background: rgba(255,255,255,0.7);
+}
 body.light-theme .settings-header h3 {
   color: #d0a000;
 }

@@ -775,9 +775,10 @@ const modalHTML = `
             <button class="close-notes-modal">&times;</button>
         </div>
             <div class="notes-modal-body">
+                <span class="current-price">Curre: $${pairData?.lastPrice || 'N/A'}</span>
+
                 <div class="pair-info">
                     <span>Price : $${highlightData.highlightPrice}</span>
-                    <span class="current-price">Current: $${pairData?.lastPrice || 'N/A'}</span>
                     <span>@: ${new Date(highlightData.highlightTime).toLocaleString()}</span>
                 </div>
                 <textarea class="notes-textarea" placeholder="Ideas & Setups...">${highlightData.notes || ''}</textarea>
