@@ -2,7 +2,7 @@
 .settings-top-row {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 8px;
   padding-bottom: 16px;
   border-bottom: 1px solid rgba(58, 63, 77, 0.5);
   margin-bottom: 16px;
@@ -16,7 +16,7 @@
 .settings-top-row .toggle-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .settings-top-row .toggle-container label {
@@ -39,8 +39,8 @@
 /* Rest of your existing settings panel styles */
 .settings-panel {
   position: absolute;
-  top: 40px;
-  right: 10px;
+  top: 165px;
+  right: 15px;
   background: #2a2f3d;
   border: 1px solid rgba(240, 185, 11, 0.3);
   border-radius: 12px;
