@@ -111,10 +111,10 @@ td:nth-child(4) {
 }
 
 /* 2. Prevent the 5th column from collapsing */
+/* Ensure the 5th column has a minimum width */
 th:nth-child(5),
 td:nth-child(5) {
-    min-width: 240px !important; /* Fixed minimum width */
-    width: auto;
+    min-width: 240px !important;
     overflow: visible !important;
 }
 
@@ -192,22 +192,24 @@ tr:hover {
         margin-bottom: 0.1px;
     min-height: auto;
 }
-/* Volume Header Container */
+/* Default styles (applies to all screen sizes) */
 .volume-header-container {
     display: flex;
-    gap: 10px; /* Reduced from 40px for better mobile behavior */
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    min-width: max-content; /* Prevent collapsing */
-    white-space: nowrap; /* Prevent text wrapping */
+    min-width: 0;
+    gap: 10px;
+    overflow: hidden; /* Prevents content from overflowing */
 }
+
 .header-buttons {
     display: flex;
     gap: 4px;
     align-items: center;
-    flex-shrink: 0; /* Prevent shrinking */
-    margin-left: auto; /* Push to the right */
+    flex-shrink: 0;
+    margin-left: auto; /* Keeps buttons right-aligned */
+    position: relative; /* For potential absolute positioning */
 }
 
 .header-button {
@@ -661,26 +663,25 @@ body.light-theme .tv-screen::after {
 }
 /* Responsive adjustments */
 @media (max-width: 600px) {
-    .coin-item {
-        grid-template-columns: 1fr auto;
+    .volume-header-container {
+        justify-content: flex-end; /* Force right alignment */
+        padding-right: 0; /* Remove any padding */
     }
-    .price {
-        grid-column: 1 / -1;
-        text-align: left;
-        padding-left: 0;
+    
+    .volume-text {
+        display: none; /* Completely hide text */
     }
-    .platform-icons {
-        justify-content: flex-end;
-    }
-    th:nth-child(5),
-    td:nth-child(5) {
-    min-width: 280px !important; /* Even more space */
-    }
-	    /* Stack buttons if absolutely necessary */
+    
     .header-buttons {
-        flex-wrap: wrap;
-        max-width: 100px; /* Prevent overflow */
-	}
+        margin-left: 0; /* Remove auto margin */
+        gap: 2px; /* Tighten spacing */
+    }
+    
+    /* Adjust gauge size */
+    #fearGreedGauge {
+        width: 40px !important;
+        height: 22px !important;
+    }
 }
 /* No Results */
 .no-results {
@@ -1781,52 +1782,77 @@ button.touch-active {
   }
 }
 
-/* Mobile Phones (768px and below) */
-/* Mobile adjustments for header buttons */
+/* Medium screens (768px and below) */
 @media (max-width: 768px) {
     .volume-header-container {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        flex-wrap: nowrap;
+        gap: 6px;
+    }
+    .volume-text {
+        max-width: 70px; /* Allows text to shrink gradually */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* Small screens (600px and below) - Critical fix */
+@media (max-width: 600px) {
+    .volume-header-container {
+        justify-content: flex-end; /* Pushes everything right */
+        padding-right: 5px; /* Prevents gauge cutoff */
     }
     
     .volume-text {
-        display: none; /* Hide text on small screens */
+        display: none; /* Hide text completely */
     }
-
+    
     .header-buttons {
-        margin-left: 0;
         gap: 2px;
+        margin-left: 0; /* Reset margin for tight spacing */
     }
-        .current-price {
-        min-width: 60px;
-        font-size: 0.8em;
-    }
-
-    /* Bring gauge and status closer */
-    #connectionIndicator,
+    
+    /* Ensure gauge stays fully visible */
     #fearGreedGauge {
-        margin-left: 0;
+        width: 40px !important;
+        height: 22px !important;
+        margin-right: 0 !important;
     }
-
-    /* Adjust gauge size if needed */
+    
+    /* TradingView widget adjustment */
+    .tradingview-widget-container {
+        right: 0;
+        width: 100% !important;
+    }
+}
+@media (max-width: 400px) {
+    .header-buttons {
+        gap: 1px; /* Minimal gap between icons */
+    }
+    
+    /* Further reduce gauge size if needed */
     #fearGreedGauge {
-        width: 50px !important;
-        height: 28px !important;
+        width: 35px !important;
+        height: 20px !important;
     }
-
-    .gauge-container {
-        width: 50px !important;
-        height: 28px !important;
+    
+    /* Make all header buttons smaller */
+    .header-button, 
+    .refresh-button, 
+    .tv-screen, 
+    .connection-indicator {
+        width: 22px;
+        height: 22px;
     }
-
-  /* TradingView widget adjustment */
-  .tradingview-widget-container {
-    right: 250px;
-  }
 }
 
+/* Volume Text - Will truncate if no space */
+.volume-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 0;
+}
 /* Small Mobile (600px and below) - Emergency measures */
 @media (max-width: 600px) {
   .volume-text {
@@ -1989,6 +2015,16 @@ button.touch-active {
 .notes-modal:active {
     cursor: grabbing;
 }
+/*
+.s-current-price {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #8a8a8a;
+}*/
+
 .current-price {
     margin-top: 1px;
     font-weight: 500;
